@@ -112,10 +112,8 @@ function App() {
 
         }
 
-        // setAllEvents([...allEvents, newEvent]);
+        setAllEvents([...allEvents, newEvent]);
     }
-
-    // }, []);
 
     return (
         <div className="App">
@@ -153,30 +151,6 @@ function App() {
                     {/* Add more properties as needed */}
                 </div>
             )}
-
-            <h1>Hello!!</h1>
-            {/* <ul>
-                {allEvents.map((event, index) => (
-                    <li key={index}>
-                        <p>Title: {event.title}</p>
-                        <p>Start Date: {event.start}</p>
-                        <p>End Date: {event.end.toString()}</p>
-                    </li>
-                ))}
-            </ul> */}
-            {/* {allEvents.map(allEvent => (
-                <p key={allEvent.id}>
-                   <h1>{allEvent.doushi}</h1> 
-                </p>
-            ))} */}
-            <Link
-                href={{
-                    pathname: "./next/nextPage"
-                }}
-            >
-                <h2 style={{ color: "red" }} >”入力画面へ”</h2>
-            </Link>
-
         </div>
     );
 }
