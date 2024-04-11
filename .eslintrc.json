@@ -3,7 +3,10 @@
         "browser": true,
         "es2021": true
     },
-    "extends": "plugin:react/recommended",
+    "extends": [
+        "plugin:react/recommended",
+        "next", "next/core-web-vitals"
+    ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaFeatures": {
@@ -17,5 +20,11 @@
         "@typescript-eslint"
     ],
     "rules": {
-    }
+        "react/react-in-jsx-scope": "off"
+    },
+    "settings": {
+        "react": {
+          "version": "detect"
+        }
+      }
 }
