@@ -3,9 +3,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 
-import styles from '../styles/App.module.css';
-
-// import "../styles/App.module.css";
+import "../styles/App.module.css";
 
 const localizer = momentLocalizer(moment);
 
@@ -136,7 +134,7 @@ const MyCalendar = () => {
                 fetchEvents();
                 setIsPopupVisible(false);
                 setShowPopup(false);
-
+                
                 // window.location.reload();
             } else {
                 // Handle error response
@@ -241,8 +239,14 @@ const MyCalendar = () => {
     };
 
     return (
-        <div className={styles.App}>
+        <div>
             <h2>＜越谷支部行事一覧＞</h2>
+            <button
+                style={{ width: "20%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
+                onClick={handleOpenPopup}>
+                新規行事入力
+            </button>
+
             <form onSubmit={handleSubmit}>
                 {showPopup && (
                     <div className="popup">
@@ -316,7 +320,7 @@ const MyCalendar = () => {
                                 }}
                                 //   value={selectedEvent.doushi || ''}
                                 onChange={(e) => handleEventChange('onkyo', e)}
-                            // required
+                                // required
                             >
                                 <option value="">音響選択</option>
                                 {data.onkyos.map((onkyo, index) => (
@@ -336,7 +340,7 @@ const MyCalendar = () => {
                                 }}
                                 //   value={selectedEvent.doushi || ''}
                                 onChange={(e) => handleEventChange('shikai', e)}
-                            // required
+                                // required
                             >
                                 <option value="">司会選択</option>
                                 {data.shikais.map((shikai, index) => (
@@ -356,7 +360,7 @@ const MyCalendar = () => {
                                 }}
                                 //   value={selectedEvent.doushi || ''}
                                 onChange={(e) => handleEventChange('uketsuke', e)}
-                            // required
+                                // required
                             >
                                 <option value="">受付選択</option>
                                 {data.uketsukes.map((uketsuke, index) => (
@@ -403,25 +407,25 @@ const MyCalendar = () => {
                         <h2>行事の追加・変更・削除</h2>
                         <label>行事：{selectedEvent.title || ''}</label>
                         <select
-                            style={{
-                                width: '50%',
-                                height: '30px',
-                                marginTop: '5px',
-                                marginLeft: '10px',
-                            }}
-                            value={selectedEvent.title || ''}
-                            onChange={(e) => handleEventChange('title', e)}
-                            required
-                        >
-                            <option value="">行事の追加</option>
-                            {data.gyouji.map((gyouji, index) => (
-                                <option key={index} value={gyouji}>
-                                    {gyouji}
-                                </option>
-                            ))}
-                        </select>
+                                style={{
+                                    width: '50%',
+                                    height: '30px',
+                                    marginTop: '5px',
+                                    marginLeft: '10px',
+                                }}
+                                  value={selectedEvent.title || ''}
+                                onChange={(e) => handleEventChange('title', e)}
+                                required
+                            >
+                                <option value="">行事の追加</option>
+                                {data.gyouji.map((gyouji, index) => (
+                                    <option key={index} value={gyouji}>
+                                        {gyouji}
+                                    </option>
+                                ))}
+                            </select>
                         <br />
-                        <label>開始時間：{selectedEvent?.start?.toString() ?? ""}</label>
+                        <label>開始時間：{selectedEvent?.start?.toString() ?? ""}</label>                  
                         <input
                             type="datetime-local"
                             value={start}
@@ -441,83 +445,83 @@ const MyCalendar = () => {
                         <br />
                         <label>導師：{selectedEvent.doushi || ''}</label>
                         <select
-                            style={{
-                                width: '50%',
-                                height: '30px',
-                                marginTop: '5px',
-                                marginLeft: '10px',
-                            }}
-                            value={selectedEvent.doushi || ''}
-                            onChange={(e) => handleEventChange('title', e)}
-                            required
-                        >
-                            <option value="">導師選択</option>
-                            {data.doushis.map((doushi, index) => (
-                                <option key={index} value={doushi}>
-                                    {doushi}
-                                </option>
-                            ))}
-                        </select>
+                                style={{
+                                    width: '50%',
+                                    height: '30px',
+                                    marginTop: '5px',
+                                    marginLeft: '10px',
+                                }}
+                                  value={selectedEvent.doushi || ''}
+                                onChange={(e) => handleEventChange('title', e)}
+                                required
+                            >
+                                <option value="">導師選択</option>
+                                {data.doushis.map((doushi, index) => (
+                                    <option key={index} value={doushi}>
+                                        {doushi}
+                                    </option>
+                                ))}
+                            </select>
                         <br />
                         <label>音響：{selectedEvent.onkyo || ''}</label>
                         <select
-                            style={{
-                                width: '60%',
-                                height: '30px',
-                                marginTop: '5px',
-                                marginLeft: '10px',
-                            }}
-                            //   value={selectedEvent.doushi || ''}
-                            onChange={(e) => handleEventChange('onkyo', e)}
-                        // required
-                        >
-                            <option value="">音響選択</option>
-                            {data.onkyos.map((onkyo, index) => (
-                                <option key={index} value={onkyo}>
-                                    {onkyo}
-                                </option>
-                            ))}
-                        </select>
+                                style={{
+                                    width: '60%',
+                                    height: '30px',
+                                    marginTop: '5px',
+                                    marginLeft: '10px',
+                                }}
+                                //   value={selectedEvent.doushi || ''}
+                                onChange={(e) => handleEventChange('onkyo', e)}
+                                // required
+                            >
+                                <option value="">音響選択</option>
+                                {data.onkyos.map((onkyo, index) => (
+                                    <option key={index} value={onkyo}>
+                                        {onkyo}
+                                    </option>
+                                ))}
+                            </select>
                         <br />
                         <label>司会：{selectedEvent.shikai || ''}</label>
                         <select
-                            style={{
-                                width: '60%',
-                                height: '30px',
-                                marginTop: '5px',
-                                marginRight: '10px',
-                            }}
-                            //   value={selectedEvent.doushi || ''}
-                            onChange={(e) => handleEventChange('shikai', e)}
-                        // required
-                        >
-                            <option value="">司会選択</option>
-                            {data.shikais.map((shikai, index) => (
-                                <option key={index} value={shikai}>
-                                    {shikai}
-                                </option>
-                            ))}
-                        </select>
+                                style={{
+                                    width: '60%',
+                                    height: '30px',
+                                    marginTop: '5px',
+                                    marginRight: '10px',
+                                }}
+                                //   value={selectedEvent.doushi || ''}
+                                onChange={(e) => handleEventChange('shikai', e)}
+                                // required
+                            >
+                                <option value="">司会選択</option>
+                                {data.shikais.map((shikai, index) => (
+                                    <option key={index} value={shikai}>
+                                        {shikai}
+                                    </option>
+                                ))}
+                            </select>
                         <br />
                         <label>受付：{selectedEvent.uketsuke || ''}</label>
                         <select
-                            style={{
-                                width: '60%',
-                                height: '30px',
-                                marginTop: '5px',
-                                marginRight: '10px',
-                            }}
-                            //   value={selectedEvent.doushi || ''}
-                            onChange={(e) => handleEventChange('uketsuke', e)}
-                        // required
-                        >
-                            <option value="">受付選択</option>
-                            {data.uketsukes.map((uketsuke, index) => (
-                                <option key={index} value={uketsuke}>
-                                    {uketsuke}
-                                </option>
-                            ))}
-                        </select>
+                                style={{
+                                    width: '60%',
+                                    height: '30px',
+                                    marginTop: '5px',
+                                    marginRight: '10px',
+                                }}
+                                //   value={selectedEvent.doushi || ''}
+                                onChange={(e) => handleEventChange('uketsuke', e)}
+                                // required
+                            >
+                                <option value="">受付選択</option>
+                                {data.uketsukes.map((uketsuke, index) => (
+                                    <option key={index} value={uketsuke}>
+                                        {uketsuke}
+                                    </option>
+                                ))}
+                            </select>
                         <br />
                         <label>備考：{selectedEvent.comment || ''}</label>
                         <input
@@ -552,11 +556,6 @@ const MyCalendar = () => {
                     </div>
                 </div>
             )}
-            <button
-                style={{ width: "20%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
-                onClick={handleOpenPopup}>
-                新規行事入力
-            </button>
         </div>
     );
 };

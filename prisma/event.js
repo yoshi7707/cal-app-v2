@@ -42,15 +42,18 @@ export const getOneEvent = async (id) => {
 }
 
 //CREATE
-export const createEvent = async (memberId, eventName, date, reservation, attendance, comment) => {
+export const createEvent = async (eventName, date, startTime, endTime, doushi, onkyo, shikai, uketsuke, comment) => {
     const event = await prisma.event.create({
     data: {
-      member: {connect: { id: memberId } },
       eventName,
       date,
-      reservation,
-      attendance,
-      comment,
+      startTime,
+      endTime,
+      doushi,
+      onkyo,
+      shikai,
+      uketsuke,
+      comment
     }
   })
   return event
@@ -58,19 +61,35 @@ export const createEvent = async (memberId, eventName, date, reservation, attend
 
 // UPDATE
 export const updateEvent = async (id, updateData) => {
+  try {
+    console.log('event.id=', id);
+    console.log('updateData->', updateData);
 
-console.log('event.id=', id);
+    const event = await prisma.event.update({
+      where: { id },
+      data: { ...updateData }
+    });
+    return event;
+  } catch (error) {
+    console.error('Error updating event:', error);
+    throw error; // Rethrow or handle the error appropriately
+  }
+};
+// export const updateEvent = async (id, updateData) => {
 
-  const event = await prisma.event.update({
-    where: {
-      id: id,
-    },
-    data: {
-      ...updateData
-    }
-  })
-  return event
-}
+// console.log('event.id=', id);
+// console.log('updateData->', updateData);
+
+//   const event = await prisma.event.update({
+//     where: {
+//       id: id,
+//     },
+//     data: {
+//       ...updateData
+//     }
+//   })
+//   return event
+// }
 
 // DELETE
 export const deleteEvent = async id => {

@@ -36,13 +36,16 @@ import {
         }
         case 'POST': {
           // Create a new event
-          const { memberId, eventName, date, reservation, attendance, comment } = req.body
-          const event = await createEvent(memberId, eventName, date, reservation, attendance, comment )
+          const { eventName, date, startTime, endTime, doushi, onkyo, shikai, uketsuke, comment } = req.body;
+          const event = await createEvent(eventName, date, startTime, endTime, doushi, onkyo, shikai, uketsuke, comment )
           return res.json(event)
         }
         case 'PUT': { 
           // Update an existing event
-          const { id, ...updateData } = req.body
+          // const id = req.query.id;
+          const { ...updateData } = req.body
+
+          // const { id, ...updateData } = req.body
 
           console.log('id in PUT=', req.query.id);
           console.log("updateData in PUT",updateData);
@@ -51,8 +54,10 @@ import {
           return res.json(event)
         }
         case 'DELETE': {
-          // Delete an existing event
-          const { id } = req.body
+          console.log('// Delete an existing event');
+          const id = req.query.id;
+          // const { id } = req.body
+          console.log('api----->', id);
           const event = await deleteEvent(id)
           return res.json(event)
         }
