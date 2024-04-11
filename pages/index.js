@@ -23,11 +23,80 @@ const MyCalendar = () => {
     });
 
     const data = {
-        gyouji: ['「復活の祈り」', '七の日感謝祭'],
-        doushis: ['田口義明', '馬場重善', '豊田利雄'],
-        onkyos: ['相良屋', '油井', '豊田利雄'],
-        shikais: ['野口', '油井', '豊田利雄'],
-        uketsukes: ['北村', '油井', '豊田利雄'],
+        gyouji: [
+            '「復活の祈り」',
+            '七の日感謝祭',
+            '発展・繁栄系祈願祭',
+            '降魔・病気平癒系祈願祭',
+            'The Missionミーティング',
+            '「心の修行」',
+            '百歳会',
+            '御法話拝聴会',
+            '映画上映会',
+            '伝道ー御法話拝聴会',
+            '新復活祭',
+            'ヘルメス大祭',
+            '5月研修',
+            '家庭ユートピア大祭',
+            '供養祭',
+            '御生誕祭',
+            'エル・カンターレ祭',
+            '街宣',
+            '外部講師セミナー',
+            '本部行事',
+            '集い',
+            'その他'
+        ],
+        doushis: [
+            '田口義明', 
+            '馬場重善', 
+            '豊田利雄',
+            '北村かおり',
+            '豊田奈奈美',
+            '渡辺和重',
+            '飯田剛',
+            '渡辺聖子',
+            '野口佐知子',
+            '鮫島三重子',
+            '土谷恵',
+            '中島真美',
+            '中島謙一郎',
+            'その他',
+        ],
+        onkyos: [
+            '相良屋昌夫',
+            '油井房雄',
+            '豊田奈奈美',
+            '北村かおり',
+            '渡辺聖子',
+            '野口佐知子',
+            '土谷恵',
+            '中島真美',
+            '神えり',
+            'その他',
+            ''
+        ],
+        shikais:[
+            '豊田奈奈美',
+            '北村かおり',
+            '渡辺聖子',
+            '野口佐知子',
+            '土谷恵',
+            '中島真美',
+            'その他',
+            ''
+        ],
+        uketsukes: [
+            '豊田奈奈美',
+            '北村かおり',
+            '渡辺聖子',
+            '野口佐知子',
+            '土谷恵',
+            '中島真美',
+            '鮫島三重子',
+            'その他',
+            '' 
+        ],
     };
 
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -409,7 +478,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginLeft: '10px',
                             }}
-                            value={selectedEvent.title || ''}
+                            // value={selectedEvent.title || ''}
                             onChange={(e) => handleEventChange('title', e)}
                             required
                         >
@@ -430,7 +499,7 @@ const MyCalendar = () => {
                             required
                         />
                         <br /> {/* 改行を挿入 */}
-                        <label>終了時間：{selectedEvent?.start?.toString() ?? ""}</label>
+                        <label>終了時間：{selectedEvent?.end?.toString() ?? ""}</label>
                         <input
                             type="datetime-local"
                             value={end}
@@ -447,8 +516,8 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginLeft: '10px',
                             }}
-                            value={selectedEvent.doushi || ''}
-                            onChange={(e) => handleEventChange('title', e)}
+                            // value={selectedEvent.doushi || ''}
+                            onChange={(e) => handleEventChange('doushi', e)}
                             required
                         >
                             <option value="">導師選択</option>
@@ -553,7 +622,7 @@ const MyCalendar = () => {
                 </div>
             )}
             <button
-                style={{ width: "20%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
+                style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
                 onClick={handleOpenPopup}>
                 新規行事入力
             </button>
