@@ -14,6 +14,9 @@ const MyCalendar = () => {
     const [title, setTitle] = useState('');
     const [start, setStart] = useState('');
     const [end, setEnd] = useState('');
+    const [isStartModified, setIsStartModified] = useState(false);
+    const [isEndModified, setIsEndModified] = useState(false);
+
     const [newEvent, setNewEvent] = useState({
         doushi: "",
         onkyo: "",
@@ -32,6 +35,9 @@ const MyCalendar = () => {
             '「心の修行」',
             '百歳会',
             'いま学びたい御法話セミナー',
+            'エンゼル',
+            'サクセスNo.1',
+            '親子',
             '御法話拝聴会',
             '映画上映会',
             '伝道ー御法話拝聴会',
@@ -39,7 +45,7 @@ const MyCalendar = () => {
             'ヘルメス大祭',
             '5月研修',
             '家庭ユートピア大祭',
-            '供養祭',
+            '幸福供養祭',
             '御生誕祭',
             'エル・カンターレ祭',
             '街宣',
@@ -239,6 +245,12 @@ const MyCalendar = () => {
     };
 
     const handleEditEvent = async () => {
+        // e.preventDefault();
+
+        // Assuming you have default or initial values for start and end
+        const finalStart = isStartModified ? start : selectedEvent.start;
+        const finalEnd = isEndModified ? end : selectedEvent.end;
+
         if (!selectedEvent || !selectedEvent.id) {
             return;
         }
@@ -248,9 +260,10 @@ const MyCalendar = () => {
                 // id: selectedEvent.id,
                 eventName: selectedEvent.title,
                 date: "",
-                // startTime: selectedEvent.start,
-                startTime: start,
-                endTime: end,
+                startTime: finalStart,
+                endTime: finalEnd,
+                // startTime: start,
+                // endTime: end,
                 // endTime: selectedEvent.end.toString(),        
                 doushi: selectedEvent.doushi,
                 onkyo: selectedEvent.onkyo,
@@ -497,11 +510,10 @@ const MyCalendar = () => {
                             type="datetime-local"
                             value={start}
                             style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                            // onChange={(e) => handleEventChange('start', e)}
-                            // onChange={(e) => setStart(e.target.value)}
                             onChange={(e) => {
                                 console.log('New start time:', e.target.value);
                                 setStart(e.target.value);
+                                setIsStartModified(true);
                             }}
                             required
                         />
@@ -511,7 +523,10 @@ const MyCalendar = () => {
                             type="datetime-local"
                             value={end}
                             style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                            onChange={(e) => setEnd(e.target.value)}
+                            onChange={(e) => {
+                                setEnd(e.target.value)
+                                setIsEndModified(true);
+                            } }
                             required
                         />
                         <br />
