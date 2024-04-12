@@ -31,6 +31,7 @@ const MyCalendar = () => {
             'The Missionミーティング',
             '「心の修行」',
             '百歳会',
+            'いま学びたい御法話セミナー',
             '御法話拝聴会',
             '映画上映会',
             '伝道ー御法話拝聴会',
@@ -48,8 +49,8 @@ const MyCalendar = () => {
             'その他'
         ],
         doushis: [
-            '田口義明', 
-            '馬場重善', 
+            '田口義明',
+            '馬場重善',
             '豊田利雄',
             '北村かおり',
             '豊田奈奈美',
@@ -76,7 +77,7 @@ const MyCalendar = () => {
             'その他',
             ''
         ],
-        shikais:[
+        shikais: [
             '豊田奈奈美',
             '北村かおり',
             '渡辺聖子',
@@ -95,7 +96,7 @@ const MyCalendar = () => {
             '中島真美',
             '鮫島三重子',
             'その他',
-            '' 
+            ''
         ],
     };
 
@@ -246,10 +247,10 @@ const MyCalendar = () => {
                 // id: selectedEvent.id,
                 eventName: selectedEvent.title,
                 date: "",
-                startTime: selectedEvent.start.toString(),
-                endTime: selectedEvent.end.toString(),
                 // startTime: selectedEvent.start,
-                // endTime: selectedEvent.end,
+                startTime: start,
+                endTime: end,
+                // endTime: selectedEvent.end.toString(),        
                 doushi: selectedEvent.doushi,
                 onkyo: selectedEvent.onkyo,
                 shikai: selectedEvent.shikai,
@@ -495,7 +496,12 @@ const MyCalendar = () => {
                             type="datetime-local"
                             value={start}
                             style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                            onChange={(e) => setStart(e.target.value)}
+                            // onChange={(e) => handleEventChange('start', e)}
+                            // onChange={(e) => setStart(e.target.value)}
+                            onChange={(e) => {
+                                console.log('New start time:', e.target.value);
+                                setStart(e.target.value);
+                            }}
                             required
                         />
                         <br /> {/* 改行を挿入 */}
