@@ -341,6 +341,8 @@ const MyCalendar = () => {
         }
     };
 
+    // const handleSelectSlot = () =>
+
     // MyCalendar.propTypes = {
     //     localizer: PropTypes.instanceOf(DateLocalizer),
     //   }
@@ -503,15 +505,16 @@ const MyCalendar = () => {
                 components={{
                     event: EventComponent // Use the custom EventComponent to render events
                 }}
-                onSelectSlot={(slotInfo) => {
-                    const { start, end } = slotInfo;
-                    setIsPopupVisible(true);
-                    setSelectedDates({ start, end });
-                    // Handle the selection of an empty slot here
-                    // You can open a popup or modal with the start and end dates pre-filled in input boxes
-                    // You can use the start and end dates to pre-fill the input boxes in your popup
-                    console.log('Selected slot:', start, end);
-                }}
+                // onSelectSlot={window.alert('Hello!')}
+                // onSelectSlot={(slotInfo) => {
+                //     const { start, end } = slotInfo;
+                //     setIsPopupVisible(true);
+                //     setSelectedDates({ start, end });
+                //     // Handle the selection of an empty slot here
+                //     // You can open a popup or modal with the start and end dates pre-filled in input boxes
+                //     // You can use the start and end dates to pre-fill the input boxes in your popup
+                //     console.log('Selected slot:', start, end);
+                // }}
                 eventPropGetter={(event) => {
                     if (event.title === "「復活の祈り」") {
                         return {
@@ -538,7 +541,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginLeft: '10px',
                             }}
-                            // value={selectedEvent.title || ''}
+                            value={selectedEvent.title || ''}
                             onChange={(e) => handleEventChange('title', e)}
                             required
                         >
@@ -550,10 +553,11 @@ const MyCalendar = () => {
                             ))}
                         </select>
                         <br />
-                        <label>開始時間：{selectedEvent?.start?.toString() ?? ""}</label>
+                        <label>開始時間：{selectedEvent?.start ? selectedEvent.start.toLocaleString('ja-JP') : ""}</label>
+                        {/* <label>開始時間：{selectedEvent?.start?.toString('ja-JP') ?? ""}</label> */}
                         <input
                             type="datetime-local"
-                            value={start}
+                            // value={start}
                             style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
                             onChange={(e) => {
                                 console.log('New start time:', e.target.value);
@@ -563,10 +567,11 @@ const MyCalendar = () => {
                             required
                         />
                         <br /> {/* 改行を挿入 */}
-                        <label>終了時間：{selectedEvent?.end?.toString() ?? ""}</label>
+                        <label>終了時間：{selectedEvent?.end ? selectedEvent.end.toLocaleString('ja-JP') : ""}</label>
+                        {/* <label>終了時間：{selectedEvent?.end?.toString() ?? ""}</label> */}
                         <input
                             type="datetime-local"
-                            value={end}
+                            // value={end}
                             style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
                             onChange={(e) => {
                                 setEnd(e.target.value)
@@ -583,7 +588,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginLeft: '10px',
                             }}
-                            // value={selectedEvent.doushi || ''}
+                            value={selectedEvent.doushi || ''}
                             onChange={(e) => handleEventChange('doushi', e)}
                             required
                         >
@@ -603,7 +608,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginLeft: '10px',
                             }}
-                            //   value={selectedEvent.doushi || ''}
+                              value={selectedEvent.onkyo || ''}
                             onChange={(e) => handleEventChange('onkyo', e)}
                         // required
                         >
@@ -623,7 +628,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginRight: '10px',
                             }}
-                            //   value={selectedEvent.doushi || ''}
+                              value={selectedEvent.shikai || ''}
                             onChange={(e) => handleEventChange('shikai', e)}
                         // required
                         >
@@ -643,7 +648,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginRight: '10px',
                             }}
-                            //   value={selectedEvent.doushi || ''}
+                              value={selectedEvent.uketsuke || ''}
                             onChange={(e) => handleEventChange('uketsuke', e)}
                         // required
                         >
@@ -664,11 +669,11 @@ const MyCalendar = () => {
                             placeholder="備考"
                         />
                         <br />
-                        <button
+                        {/* <button
                             style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
                             onClick={handleSubmit}>
                             行事の追加
-                        </button>
+                        </button> */}
                         <button
                             style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
                             onClick={handleEditEvent}>
@@ -679,7 +684,7 @@ const MyCalendar = () => {
                             style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
                         >行事の削除
                         </button>
-                        <br />
+                        {/* <br /> */}
                         <button
                             style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
                             onClick={() => setIsPopupVisible(false)}>
