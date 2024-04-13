@@ -221,15 +221,20 @@ const MyCalendar = () => {
                 // onClick={handleSelectEvent(event)}
                 // onSelectEvent={(event) => setSelectedEvent(event)}
                 onSelectEvent={handleSelectEvent}
-                onSelectSlot={(slotInfo) => {
-                    const { start, end } = slotInfo;
-                    setIsPopupVisible(true);
-                    setSelectedDates({ start, end });
-                    // Handle the selection of an empty slot here
-                    // You can open a popup or modal with the start and end dates pre-filled in input boxes
-                    // You can use the start and end dates to pre-fill the input boxes in your popup
-                    console.log('Selected slot:', start, end);
-                }}
+                onSelectSlot={() => {
+                    if (typeof window !== 'undefined') {
+                      window.alert("bbbbb");
+                    }
+                  }}
+                // onSelectSlot={(slotInfo) => {
+                //     const { start, end } = slotInfo;
+                //     setIsPopupVisible(true);
+                //     setSelectedDates({ start, end });
+                //     // Handle the selection of an empty slot here
+                //     // You can open a popup or modal with the start and end dates pre-filled in input boxes
+                //     // You can use the start and end dates to pre-fill the input boxes in your popup
+                //     console.log('Selected slot:', start, end);
+                // }}
                 eventPropGetter={(event) => {
                     if (event.title === "「復活の祈り」") {
                         return {

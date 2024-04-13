@@ -13,9 +13,9 @@ const localizer = momentLocalizer(moment);
 
 const EventComponent = ({ event }) => (
     <div>
-        <div className="smaller-title">{event.title}</div>
-        <div className="smaller-font">導: {event.doushi}</div>
-        <div className="smaller-font">音: {event.onkyo}</div>
+        <div>{event.title}</div>
+        <div>導師: {event.doushi}</div>
+        <div>音響: {event.onkyo}</div>
         {/* Add more custom fields here */}
     </div>
 );
@@ -494,7 +494,7 @@ const MyCalendar = () => {
             <Calendar
                 localizer={localizer}
                 events={events}
-                style={{ height: 1700 }}
+                style={{ height: 2200 }}
                 startAccessor="start"
                 endAccessor="end"
                 // onClick={handleSelectEvent(event)}

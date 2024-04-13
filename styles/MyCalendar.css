@@ -19,6 +19,14 @@
   z-index: 1001; /* Ensure content is above the overlay */
 }
 
+.smaller-title {
+  font-size: 70%; /* Set the font size to 12 pixels */
+}
+
+.smaller-font {
+  font-size: 70%; /* Set the font size to 12 pixels */
+}
+
 /* .popup {
   position: fixed;
   top: 0;

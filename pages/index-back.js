@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
+import { Calendar, momentLocalizer, DateLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
+
+// import PropTypes from 'prop-types'
 
 import styles from '../styles/App.module.css';
 
@@ -330,6 +332,10 @@ const MyCalendar = () => {
         }
     };
 
+    // MyCalendar.propTypes = {
+    //     localizer: PropTypes.instanceOf(DateLocalizer),
+    //   }
+
     return (
         <div className={styles.App}>
             <h2>＜越谷支部行事一覧＞</h2>
@@ -485,6 +491,18 @@ const MyCalendar = () => {
                 // onSelectEvent={(event) => setSelectedEvent(event)}
                 onSelectEvent={handleSelectEvent}
                 style={{ height: 1000 }}
+                eventPropGetter={(event) => {
+                    if (event.title === "「復活の祈り」") {
+                        return {
+                            style: {
+                                backgroundColor: 'red', // This sets the text color to red
+                            }
+                        };
+                    }
+                    return {}; // Return empty for events that don't match
+                }}
+                // showMultiDayTimes
+                // popup={true}
             />
 
             {isPopupVisible && (
@@ -532,7 +550,7 @@ const MyCalendar = () => {
                             onChange={(e) => {
                                 setEnd(e.target.value)
                                 setIsEndModified(true);
-                            } }
+                            }}
                             required
                         />
                         <br />
