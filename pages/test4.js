@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, DateLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
@@ -198,7 +198,7 @@ const MyCalendar = () => {
 
     const adjustedStart = new Date(selectedDates.start.getTime());
     const adjustedEnd = new Date(selectedDates.end.getTime());
-
+  
     // Adjust the time to be in JST
     adjustedStart.setHours(adjustedStart.getHours() - 9);
     adjustedEnd.setHours(adjustedEnd.getHours() - 9);
@@ -254,15 +254,6 @@ const MyCalendar = () => {
         setIsPopupVisible(false);
         setShowPopup(false);
 
-        setSelectedDates({ start: null, end: null });
-        setSelectedEvent({
-          title: "",
-          doushi: "",
-          onkyo: "",
-          shikai: "",
-          uketsuke: "",
-          comment: ""
-        });
         // window.location.reload();
       } else {
         // Handle error response
@@ -279,15 +270,6 @@ const MyCalendar = () => {
 
   const handleClosePopup = () => {
     setShowPopup(false);
-    setSelectedDates({ start: null, end: null });
-    setSelectedEvent({
-      title: "",
-      doushi: "",
-      onkyo: "",
-      shikai: "",
-      uketsuke: "",
-      comment: ""
-    });
   };
 
   const handleEventChange = (propertyName, e) => {
@@ -344,16 +326,6 @@ const MyCalendar = () => {
         console.log('Event data updated successfully!');
         setIsPopupVisible(false);
         fetchEvents();
-
-        setSelectedDates({ start: null, end: null });
-        setSelectedEvent({
-          title: "",
-          doushi: "",
-          onkyo: "",
-          shikai: "",
-          uketsuke: "",
-          comment: ""
-        });
       } else {
         // Handle error response
         console.error('Failed to update event data');
@@ -391,14 +363,6 @@ const MyCalendar = () => {
       console.error('Error deleting event:', error);
     }
   };
-
-  const { defaultDate, scrollToTime } = useMemo(
-    () => ({
-      defaultDate: new Date(2015, 3, 12),
-      scrollToTime: new Date(1970, 1, 1, 6),
-    }),
-    []
-  )
 
   // const handleSelectSlot = () =>
 
@@ -460,7 +424,7 @@ const MyCalendar = () => {
                                 required
                             /> */}
               <br /> {/* 改行を挿入 */}
-              <label>終了時間：{selectedDates.end ? selectedDates.end.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}</label>
+              <label>終了時間：</label>
               <input
                 type="datetime-local"
                 value={selectedDates.end ? selectedDates.end.toISOString('ja-JP').slice(0, 16) : ''}
@@ -609,14 +573,6 @@ const MyCalendar = () => {
 
           setShowPopup(true);
           setSelectedDates({ start: adjustedStart, end: adjustedEnd });
-          setSelectedEvent({
-            title: "",
-            doushi: "",
-            onkyo: "",
-            shikai: "",
-            uketsuke: "",
-            comment: "",
-          });
           // setSelectedDates({ start, end });
           // Handle the selection of an empty slot here
           // You can open a popup or modal with the start and end dates pre-filled in input boxes
@@ -636,7 +592,7 @@ const MyCalendar = () => {
         // showMultiDayTimes
         popup={true}
         selectable
-        scrollToTime={scrollToTime}
+      // scrollToTime={scrollToTime}
       />
 
       {isPopupVisible && (

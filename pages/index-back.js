@@ -83,6 +83,11 @@ const MyCalendar = () => {
             '鮫島三重子',
             '土谷恵',
             '中島真美',
+            '相良屋昌夫',
+            '神えり',
+            '黒田信子',
+            '雨谷大',
+            '吉田瑞季',
             '中島謙一郎',
             'その他',
         ],
@@ -341,6 +346,8 @@ const MyCalendar = () => {
         }
     };
 
+    // const handleSelectSlot = () =>
+
     // MyCalendar.propTypes = {
     //     localizer: PropTypes.instanceOf(DateLocalizer),
     //   }
@@ -503,15 +510,16 @@ const MyCalendar = () => {
                 components={{
                     event: EventComponent // Use the custom EventComponent to render events
                 }}
-                onSelectSlot={(slotInfo) => {
-                    const { start, end } = slotInfo;
-                    setIsPopupVisible(true);
-                    setSelectedDates({ start, end });
-                    // Handle the selection of an empty slot here
-                    // You can open a popup or modal with the start and end dates pre-filled in input boxes
-                    // You can use the start and end dates to pre-fill the input boxes in your popup
-                    console.log('Selected slot:', start, end);
-                }}
+                // onSelectSlot={window.alert('Hello!')}
+                // onSelectSlot={(slotInfo) => {
+                //     const { start, end } = slotInfo;
+                //     setIsPopupVisible(true);
+                //     setSelectedDates({ start, end });
+                //     // Handle the selection of an empty slot here
+                //     // You can open a popup or modal with the start and end dates pre-filled in input boxes
+                //     // You can use the start and end dates to pre-fill the input boxes in your popup
+                //     console.log('Selected slot:', start, end);
+                // }}
                 eventPropGetter={(event) => {
                     if (event.title === "「復活の祈り」") {
                         return {

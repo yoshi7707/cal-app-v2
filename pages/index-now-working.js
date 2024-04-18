@@ -2,9 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, DateLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
-import 'moment/locale/ja';
-
-import Selectable from '../react-big-calendar/stories/demos/exampleCode/selectable.js';
 
 // import PropTypes from 'prop-types'
 
@@ -28,11 +25,8 @@ const MyCalendar = () => {
     const [title, setTitle] = useState('');
     const [start, setStart] = useState('');
     const [end, setEnd] = useState('');
-
     const [isStartModified, setIsStartModified] = useState(false);
     const [isEndModified, setIsEndModified] = useState(false);
-
-    const [selectedDates, setSelectedDates] = useState({ start: null, end: null });
 
     const [newEvent, setNewEvent] = useState({
         doushi: "",
@@ -96,6 +90,7 @@ const MyCalendar = () => {
             '吉田瑞季',
             '中島謙一郎',
             'その他',
+            '',
         ],
         onkyos: [
             '相良屋昌夫',
@@ -217,8 +212,8 @@ const MyCalendar = () => {
         const eventData = {
             eventName: selectedEvent.title ? selectedEvent.title : "",
             date: "",
-            startTime: selectedDates.start,
-            endTime: selectedDates.end,
+            startTime: start,
+            endTime: end,
             id: newEvent.id ? newEvent.id : "",
             doushi: selectedEvent.doushi ? selectedEvent.doushi : "",
             onkyo: selectedEvent.onkyo ? selectedEvent.onkyo : "",
@@ -386,59 +381,23 @@ const MyCalendar = () => {
                                 ))}
                             </select>
                             <br />
-                            <label>開始日:</label>
-<input
-  type="date"
-  value={selectedDates.start ? selectedDates.start.toISOString().slice(0, 10) : ''}
-  style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-  onChange={(e) => {
-    const newDate = new Date(e.target.value);
-    setSelectedDates({ ...selectedDates, start: newDate });
-  }}
-  required
-/>
-
-<label>開始時刻:</label>
-<input
-  type="time"
-  value={selectedDates.start ? selectedDates.start.toISOString().slice(11, 16) : ''}
-  style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-  onChange={(e) => {
-    const [hours, minutes] = e.target.value.split(':');
-    const newDate = new Date(selectedDates.start);
-    newDate.setHours(parseInt(hours));
-    newDate.setMinutes(parseInt(minutes));
-    setSelectedDates({ ...selectedDates, start: newDate });
-  }}
-  required
-/>
-
-<label>終了日:</label>
-<input
-  type="date"
-  value={selectedDates.end ? selectedDates.end.toISOString().slice(0, 10) : ''}
-  style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-  onChange={(e) => {
-    const newDate = new Date(e.target.value);
-    setSelectedDates({ ...selectedDates, end: newDate });
-  }}
-  required
-/>
-
-<label>終了時刻:</label>
-<input
-  type="time"
-  value={selectedDates.end ? selectedDates.end.toISOString().slice(11, 16) : ''}
-  style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-  onChange={(e) => {
-    const [hours, minutes] = e.target.value.split(':');
-    const newDate = new Date(selectedDates.end);
-    newDate.setHours(parseInt(hours));
-    newDate.setMinutes(parseInt(minutes));
-    setSelectedDates({ ...selectedDates, end: newDate });
-  }}
-  required
-/>
+                            <label>開始時間：</label>
+                            <input
+                                type="datetime-local"
+                                // value={start}
+                                style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
+                                onChange={(e) => setStart(e.target.value)}
+                                required
+                            />
+                            <br /> {/* 改行を挿入 */}
+                            <label>終了時間：</label>
+                            <input
+                                type="datetime-local"
+                                // value={end}
+                                style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
+                                onChange={(e) => setEnd(e.target.value)}
+                                required
+                            />
                             <br />
                             <label>導師：</label>
                             <select
@@ -544,15 +503,6 @@ const MyCalendar = () => {
                 localizer={localizer}
                 events={events}
                 style={{ height: 1700 }}
-                messages={{
-                    today: '今日',
-                    previous: '前へ',
-                    next: '次へ',
-                    month: '月',
-                    week: '週',
-                    day: '日',
-                    agenda: '予定'
-                }}
                 startAccessor="start"
                 endAccessor="end"
                 // onClick={handleSelectEvent(event)}
@@ -562,15 +512,15 @@ const MyCalendar = () => {
                     event: EventComponent // Use the custom EventComponent to render events
                 }}
                 // onSelectSlot={window.alert('Hello!')}
-                onSelectSlot={(slotInfo) => {
-                    const { start, end } = slotInfo;
-                    setShowPopup(true);
-                    setSelectedDates({ start, end });
-                    // Handle the selection of an empty slot here
-                    // You can open a popup or modal with the start and end dates pre-filled in input boxes
-                    // You can use the start and end dates to pre-fill the input boxes in your popup
-                    console.log('Selected slot:', start, end);
-                }}
+                // onSelectSlot={(slotInfo) => {
+                //     const { start, end } = slotInfo;
+                //     setIsPopupVisible(true);
+                //     setSelectedDates({ start, end });
+                //     // Handle the selection of an empty slot here
+                //     // You can open a popup or modal with the start and end dates pre-filled in input boxes
+                //     // You can use the start and end dates to pre-fill the input boxes in your popup
+                //     console.log('Selected slot:', start, end);
+                // }}
                 eventPropGetter={(event) => {
                     if (event.title === "「復活の祈り」") {
                         return {
@@ -583,7 +533,6 @@ const MyCalendar = () => {
                 }}
                 // showMultiDayTimes
                 popup={true}
-                selectable
             />
 
             {isPopupVisible && (
@@ -665,7 +614,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginLeft: '10px',
                             }}
-                            value={selectedEvent.onkyo || ''}
+                              value={selectedEvent.onkyo || ''}
                             onChange={(e) => handleEventChange('onkyo', e)}
                         // required
                         >
@@ -685,7 +634,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginRight: '10px',
                             }}
-                            value={selectedEvent.shikai || ''}
+                              value={selectedEvent.shikai || ''}
                             onChange={(e) => handleEventChange('shikai', e)}
                         // required
                         >
@@ -705,7 +654,7 @@ const MyCalendar = () => {
                                 marginTop: '5px',
                                 marginRight: '10px',
                             }}
-                            value={selectedEvent.uketsuke || ''}
+                              value={selectedEvent.uketsuke || ''}
                             onChange={(e) => handleEventChange('uketsuke', e)}
                         // required
                         >
