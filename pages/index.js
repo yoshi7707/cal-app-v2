@@ -436,24 +436,68 @@ const MyCalendar = () => {
   )
 
   const resizeEvent = useCallback(
-    ({ event, start, end }) => {
-      setEvents((prevEvents) => {
-        const updatedEvents = prevEvents.map((prevEvent) => {
-          if (prevEvent.id === event.id) {
-            return { ...prevEvent, start, end };
-          }
-          return prevEvent;
+    async ({ event, start, end }) => {
+      try {
+        // Make a PUT request to update the event data in the database
+        const response = await fetch(`/api/event?id=${event.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventName: event.title,
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            doushi: event.doushi,
+            onkyo: event.onkyo,
+            shikai: event.shikai,
+            uketsuke: event.uketsuke,
+            comment: event.comment,
+          }),
         });
-        return updatedEvents;
-      });
+  
+        if (response.ok) {
+          // Handle success response
+          console.log('Event data updated successfully!');
+          // Update events state
+          setEvents((prevEvents) => {
+            const updatedEvents = prevEvents.map((prevEvent) => {
+              if (prevEvent.id === event.id) {
+                return { ...prevEvent, start, end };
+              }
+              return prevEvent;
+            });
+            return updatedEvents;
+          });
+        } else {
+          // Handle error response
+          console.error('Failed to update event data');
+        }
+      } catch (error) {
+        console.error('Error updating event data:', error);
+      }
     },
     [setEvents]
   );
+  // const resizeEvent = useCallback(
+  //   ({ event, start, end }) => {
+  //     setEvents((prevEvents) => {
+  //       const updatedEvents = prevEvents.map((prevEvent) => {
+  //         if (prevEvent.id === event.id) {
+  //           return { ...prevEvent, start, end };
+  //         }
+  //         return prevEvent;
+  //       });
+  //       return updatedEvents;
+  //     });
+  //   },
+  //   [setEvents]
+  // );
 
   const [myEvents, setMyEvents] = useState(events)
 
   const moveEvent = useCallback(
-    ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
+    async ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
       const { allDay } = event;
       if (!allDay && droppedOnAllDaySlot) {
         event.allDay = true;
@@ -461,20 +505,72 @@ const MyCalendar = () => {
   
       const updatedEvent = { ...event, start, end, allDay };
   
-      // Update myEvents state
-      setMyEvents((prev) => {
-        const existingEvents = prev.filter((ev) => ev.id !== event.id);
-        return [...existingEvents, updatedEvent];
-      });
+      try {
+        // Make a PUT request to update the event data in the database
+        const response = await fetch(`/api/event?id=${event.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventName: event.title,
+            startTime: start.toISOString(),
+            endTime: end.toISOString(),
+            doushi: event.doushi,
+            onkyo: event.onkyo,
+            shikai: event.shikai,
+            uketsuke: event.uketsuke,
+            comment: event.comment,
+          }),
+        });
   
-      // Update events state
-      setEvents((prev) => {
-        const existingEvents = prev.filter((ev) => ev.id !== event.id);
-        return [...existingEvents, updatedEvent];
-      });
+        if (response.ok) {
+          // Handle success response
+          console.log('Event data updated successfully!');
+          // Update myEvents state
+          setMyEvents((prev) => {
+            const existingEvents = prev.filter((ev) => ev.id !== event.id);
+            return [...existingEvents, updatedEvent];
+          });
+  
+          // Update events state
+          setEvents((prev) => {
+            const existingEvents = prev.filter((ev) => ev.id !== event.id);
+            return [...existingEvents, updatedEvent];
+          });
+        } else {
+          // Handle error response
+          console.error('Failed to update event data');
+        }
+      } catch (error) {
+        console.error('Error updating event data:', error);
+      }
     },
     [setMyEvents, setEvents]
   );
+  // const moveEvent = useCallback(
+  //   ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
+  //     const { allDay } = event;
+  //     if (!allDay && droppedOnAllDaySlot) {
+  //       event.allDay = true;
+  //     }
+  
+  //     const updatedEvent = { ...event, start, end, allDay };
+  
+  //     // Update myEvents state
+  //     setMyEvents((prev) => {
+  //       const existingEvents = prev.filter((ev) => ev.id !== event.id);
+  //       return [...existingEvents, updatedEvent];
+  //     });
+  
+  //     // Update events state
+  //     setEvents((prev) => {
+  //       const existingEvents = prev.filter((ev) => ev.id !== event.id);
+  //       return [...existingEvents, updatedEvent];
+  //     });
+  //   },
+  //   [setMyEvents, setEvents]
+  // );
 
   return (
     <div className={styles.App}>
