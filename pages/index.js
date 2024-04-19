@@ -4,6 +4,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/ja';
 moment.locale('ja');
+// import dateFns from 'date-fns';
 
 import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
@@ -17,6 +18,9 @@ import format from "date-fns/format";
 import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
+
+import { setHours, setMinutes } from 'date-fns';
+
 // import enUS from 'date-fns/locale/en-US'
 
 // const localizer = dateFnsLocalizer(dateFns, {
@@ -36,13 +40,13 @@ const localizerFnc = dateFnsLocalizer({
 //   startOfWeek: (start) => new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0),
 // });
 
-// import Selectable from '../react-big-calendar/stories/demos/exampleCode/selectable.js';
-
 // import PropTypes from 'prop-types'
 
 import styles from '../styles/App.module.css';
 
 // import "../styles/App.module.css";
+const min = setHours(setMinutes(new Date(), 0), 8);
+const max = setHours(setMinutes(new Date(), 0), 22);
 
 const localizer = momentLocalizer(moment);
 
@@ -472,41 +476,6 @@ const MyCalendar = () => {
     [setMyEvents, setEvents]
   );
 
-  // const moveEvent = useCallback(
-  //   ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
-  //     const { allDay } = event
-  //     if (!allDay && droppedOnAllDaySlot) {
-  //       event.allDay = true
-  //     }
-
-  //     setMyEvents((prev) => {
-  //       const existing = prev.find((ev) => ev.id === event.id) ?? {}
-  //       const filtered = prev.filter((ev) => ev.id !== event.id)
-  //       return [...filtered, { ...existing, start, end, allDay }]
-  //     })
-  //   },
-  //   [setMyEvents]
-  // )
-  // const resizeEvent = useCallback(
-  //   ({ event, start, end }) => {
-  //     setSelectedDates((prev) => {
-  //       const prevArray = Array.isArray(prev) ? prev : [];
-  //       const existing = prevArray.find((ev) => ev.id === event.id) ?? {};
-  //       const filtered = prevArray.filter((ev) => ev.id !== event.id);
-  //       // const existing = prev.find((ev) => ev.id === event.id) ?? {}
-  //       // const filtered = prev.filter((ev) => ev.id !== event.id)
-  //       return [...filtered, { ...existing, start, end }]
-  //     })
-  //   },
-  //   [setSelectedDates]
-  // )
-
-  // const handleSelectSlot = () =>
-
-  // MyCalendar.propTypes = {
-  //     localizer: PropTypes.instanceOf(DateLocalizer),
-  //   }
-
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
@@ -682,6 +651,8 @@ const MyCalendar = () => {
         localizer={localizer}
         events={events}
         style={{ height: 1700 }}
+        min={min}
+        max={max}
         messages={{
           today: '今日',
           previous: '前へ',
