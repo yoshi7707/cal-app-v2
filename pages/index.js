@@ -1,11 +1,42 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Calendar, momentLocalizer, DateLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/ja';
 moment.locale('ja');
 
-import Selectable from '../react-big-calendar/stories/demos/exampleCode/selectable.js';
+import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
+const DragAndDropCalendar = withDragAndDrop(Calendar)
+
+// Storybook cannot alias this, so you would use 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
+// import '../react-big-calendar/src/addons/dragAndDrop/styles.scss'
+
+import { dateFnsLocalizer } from 'react-big-calendar';
+import dateFns from 'date-fns';
+import format from "date-fns/format";
+import parse from "date-fns/parse";
+import startOfWeek from "date-fns/startOfWeek";
+import getDay from "date-fns/getDay";
+// import enUS from 'date-fns/locale/en-US'
+
+// const localizer = dateFnsLocalizer(dateFns, {
+//   format: 'yyyy/MM/dd',
+// });
+
+const localizerFnc = dateFnsLocalizer({
+  dateFns,
+  format: 'yyyy/MM/dd',
+  parse,
+  startOfWeek: (start) => new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0),
+  getDay,
+  // locales,
+});
+
+// const localizerFnc = dateFnsLocalizer(dateFns, {
+//   startOfWeek: (start) => new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0),
+// });
+
+// import Selectable from '../react-big-calendar/stories/demos/exampleCode/selectable.js';
 
 // import PropTypes from 'prop-types'
 
@@ -400,6 +431,76 @@ const MyCalendar = () => {
     []
   )
 
+  const resizeEvent = useCallback(
+    ({ event, start, end }) => {
+      setEvents((prevEvents) => {
+        const updatedEvents = prevEvents.map((prevEvent) => {
+          if (prevEvent.id === event.id) {
+            return { ...prevEvent, start, end };
+          }
+          return prevEvent;
+        });
+        return updatedEvents;
+      });
+    },
+    [setEvents]
+  );
+
+  const [myEvents, setMyEvents] = useState(events)
+
+  const moveEvent = useCallback(
+    ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
+      const { allDay } = event;
+      if (!allDay && droppedOnAllDaySlot) {
+        event.allDay = true;
+      }
+  
+      const updatedEvent = { ...event, start, end, allDay };
+  
+      // Update myEvents state
+      setMyEvents((prev) => {
+        const existingEvents = prev.filter((ev) => ev.id !== event.id);
+        return [...existingEvents, updatedEvent];
+      });
+  
+      // Update events state
+      setEvents((prev) => {
+        const existingEvents = prev.filter((ev) => ev.id !== event.id);
+        return [...existingEvents, updatedEvent];
+      });
+    },
+    [setMyEvents, setEvents]
+  );
+
+  // const moveEvent = useCallback(
+  //   ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
+  //     const { allDay } = event
+  //     if (!allDay && droppedOnAllDaySlot) {
+  //       event.allDay = true
+  //     }
+
+  //     setMyEvents((prev) => {
+  //       const existing = prev.find((ev) => ev.id === event.id) ?? {}
+  //       const filtered = prev.filter((ev) => ev.id !== event.id)
+  //       return [...filtered, { ...existing, start, end, allDay }]
+  //     })
+  //   },
+  //   [setMyEvents]
+  // )
+  // const resizeEvent = useCallback(
+  //   ({ event, start, end }) => {
+  //     setSelectedDates((prev) => {
+  //       const prevArray = Array.isArray(prev) ? prev : [];
+  //       const existing = prevArray.find((ev) => ev.id === event.id) ?? {};
+  //       const filtered = prevArray.filter((ev) => ev.id !== event.id);
+  //       // const existing = prev.find((ev) => ev.id === event.id) ?? {}
+  //       // const filtered = prev.filter((ev) => ev.id !== event.id)
+  //       return [...filtered, { ...existing, start, end }]
+  //     })
+  //   },
+  //   [setSelectedDates]
+  // )
+
   // const handleSelectSlot = () =>
 
   // MyCalendar.propTypes = {
@@ -577,7 +678,7 @@ const MyCalendar = () => {
         )}
       </form>
 
-      <Calendar
+      <DragAndDropCalendar
         localizer={localizer}
         events={events}
         style={{ height: 1700 }}
@@ -601,6 +702,9 @@ const MyCalendar = () => {
         // onSelectSlot={window.alert('Hello!')}
         onSelectSlot={(slotInfo) => {
           const { start, end } = slotInfo;
+
+          // const adjustedStart = localizerFnc.startOfDay(start);
+          // const adjustedEnd = localizerFnc.endOfDay(end);
           const adjustedStart = new Date(start.getTime() - (start.getTimezoneOffset() * 60000));
           const adjustedEnd = new Date(end.getTime() - (end.getTimezoneOffset() * 60000));
 
@@ -636,7 +740,11 @@ const MyCalendar = () => {
         // showMultiDayTimes
         popup={true}
         selectable
+        resizable
         scrollToTime={scrollToTime}
+        onEventResize={resizeEvent}
+        // events={myEvents}
+        onEventDrop={moveEvent}
       />
 
       {isPopupVisible && (
