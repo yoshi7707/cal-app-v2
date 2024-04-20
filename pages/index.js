@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Calendar, momentLocalizer, DateLocalizer } from 'react-big-calendar';
+import { Calendar, momentLocalizer, Views, DateLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/ja';
 moment.locale('ja');
+import * as dates from '../react-big-calendar/src/utils/dates'
+
 // import dateFns from 'date-fns';
 
 import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
@@ -479,20 +481,6 @@ const MyCalendar = () => {
     },
     [setEvents]
   );
-  // const resizeEvent = useCallback(
-  //   ({ event, start, end }) => {
-  //     setEvents((prevEvents) => {
-  //       const updatedEvents = prevEvents.map((prevEvent) => {
-  //         if (prevEvent.id === event.id) {
-  //           return { ...prevEvent, start, end };
-  //         }
-  //         return prevEvent;
-  //       });
-  //       return updatedEvents;
-  //     });
-  //   },
-  //   [setEvents]
-  // );
 
   const [myEvents, setMyEvents] = useState(events)
 
@@ -548,29 +536,28 @@ const MyCalendar = () => {
     },
     [setMyEvents, setEvents]
   );
-  // const moveEvent = useCallback(
-  //   ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
-  //     const { allDay } = event;
-  //     if (!allDay && droppedOnAllDaySlot) {
-  //       event.allDay = true;
-  //     }
+
+  const handleEventCopy = ({ event, e }) => {
+    // Handle event copy logic here
+    console.log('Event copied:', event);
+  };
   
-  //     const updatedEvent = { ...event, start, end, allDay };
-  
-  //     // Update myEvents state
-  //     setMyEvents((prev) => {
-  //       const existingEvents = prev.filter((ev) => ev.id !== event.id);
-  //       return [...existingEvents, updatedEvent];
-  //     });
-  
-  //     // Update events state
-  //     setEvents((prev) => {
-  //       const existingEvents = prev.filter((ev) => ev.id !== event.id);
-  //       return [...existingEvents, updatedEvent];
-  //     });
-  //   },
-  //   [setMyEvents, setEvents]
-  // );
+  const handleEventPaste = ({ event, e }) => {
+    // Handle event paste logic here
+    console.log('Event pasted:', event);
+  };
+
+  // const { components, defaultDate, max, views } = useMemo(
+  //   () => ({
+  //     components: {
+  //       timeSlotWrapper: ColoredDateCellWrapper,
+  //     },
+  //     defaultDate: new Date(2015, 3, 1),
+  //     max: dates.add(dates.endOf(new Date(2015, 17, 1), 'day'), -1, 'hours'),
+  //     views: Object.keys(Views).map((k) => Views[k]),
+  //   }),
+  //   []
+  // )
 
   return (
     <div className={styles.App}>
@@ -743,10 +730,11 @@ const MyCalendar = () => {
         )}
       </form>
 
+      {/* <Calendar */}
       <DragAndDropCalendar
         localizer={localizer}
         events={events}
-        style={{ height: 1700 }}
+        style={{ height: 1600 }}
         min={min}
         max={max}
         messages={{
@@ -804,14 +792,19 @@ const MyCalendar = () => {
           }
           return {}; // Return empty for events that don't match
         }}
-        // showMultiDayTimes
+        showMultiDayTimes
         popup={true}
         selectable
         resizable
         scrollToTime={scrollToTime}
         onEventResize={resizeEvent}
         // events={myEvents}
-        onEventDrop={moveEvent}
+        // onEventDrop={moveEvent}
+        // showMultiDayTimes
+        // defaultDate={defaultDate}
+        // views={views}
+        onEventCopy={handleEventCopy}
+        onEventPaste={handleEventPaste}
       />
 
       {isPopupVisible && (
