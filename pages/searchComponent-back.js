@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const data = {
   gyouji: [
@@ -100,14 +100,6 @@ const SearchComponent = ({ events, data, onSearch }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
-  useEffect(() => {
-    if (data) {
-      console.log(data.onkyos);
-      console.log(data.gyouji);
-  
-    }
-  }, [data]);
-
   const handleSearch = () => {
     const searchTerm = `${selectedGyouji} ${selectedDoushi} ${selectedOnkyo}`;
     const filteredResults = events.filter(
@@ -163,7 +155,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
           <option value="田口義明">田口義明</option>
           <option value="馬場重善">馬場重善</option>
           <option value="豊田利雄">豊田利雄</option>
-          <option value="北村かおり">北村かおり</option>
+          <option value="北村かおり">導師選択</option>
           <option value="豊田奈奈美">豊田奈奈美</option>
           <option value="渡辺和重">渡辺和重</option>
           <option value='飯田剛'>飯田剛</option>
