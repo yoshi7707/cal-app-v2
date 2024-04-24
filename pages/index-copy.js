@@ -14,8 +14,6 @@ const DragAndDropCalendar = withDragAndDrop(Calendar)
 // Storybook cannot alias this, so you would use 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
 // import '../react-big-calendar/src/addons/dragAndDrop/styles.scss'
 
-import SearchComponent from './searchComponent';
-
 import { dateFnsLocalizer } from 'react-big-calendar';
 import dateFns from 'date-fns';
 import format from "date-fns/format";
@@ -715,18 +713,6 @@ const MyCalendar = () => {
     console.log('Event pasted:', event);
   };
 
-  const [filteredEvents, setFilteredEvents] = useState(events);
-
-  const handleSearch = (searchTerm) => {
-    const filtered = events.filter(
-      (event) =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.doushi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.onkyo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredEvents(filtered);
-  };
-
   // const { components, defaultDate, max, views } = useMemo(
   //   () => ({
   //     components: {
@@ -742,8 +728,6 @@ const MyCalendar = () => {
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
-      <SearchComponent events={events} data={data} onSearch={handleSearch} />
-      {/* <SearchComponent events={events} onSearch={handleSearch} /> */}
       <form onSubmit={handleSubmit}>
         {showPopup && (
           <div className="popup">
@@ -987,13 +971,13 @@ const MyCalendar = () => {
         // defaultDate={defaultDate}
         // views={views}
         // events={myEvents}
-        // onEventDrop={handleEventCopy}
+        onEventDrop={handleEventCopy}
         // resourceIdAccessor="resourceId"
         // resources={resourceMap}
         // resourceTitleAccessor="resourceTitle"
 
-        // onEventCopy={handleEventCopy}
-        // onEventPaste={handleEventPaste}
+        onEventCopy={handleEventCopy}
+        onEventPaste={handleEventPaste}
       />
 
       {isPopupVisible && (

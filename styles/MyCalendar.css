@@ -17,7 +17,10 @@
   border-radius: 5px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
   z-index: 1001;
-  text-align: left;  /* Ensure content is above the overlay */
+  text-align: left; 
+  max-height: 80%;
+  /* max-height: 80vh; */
+  overflow-y: auto; /* Ensure content is above the overlay */
 }
 
 .smaller-title {
