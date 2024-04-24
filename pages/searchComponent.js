@@ -152,11 +152,31 @@ const SearchComponent = ({ events, data, onSearch }) => {
           onChange={(e) => setSelectedDoushi(e.target.value)}
         >
           <option value="">導師選択</option>
-          {data.doushis.map((doushi, index) => (
+          <option value="田口義明">田口義明</option>
+          <option value="馬場重善">馬場重善</option>
+          <option value="豊田利雄">豊田利雄</option>
+          <option value="北村かおり">導師選択</option>
+          <option value="豊田奈奈美">豊田奈奈美</option>
+          <option value="渡辺和重">渡辺和重</option>
+          <option value='飯田剛'>飯田剛</option>
+          <option value="渡辺聖子">渡辺聖子</option>
+          <option value="野口佐知子">野口佐知子</option>
+          <option value="鮫島三重子">鮫島三重子</option>
+          <option value="土谷恵">土谷恵</option>
+          <option value="中島真美">中島真美</option>
+          <option value="相良屋昌夫">相良屋昌夫</option>
+          <option value="神えり">神えり</option>
+          <option value='黒田信子'>黒田信子</option>
+          <option value="雨谷大">中雨谷大</option>
+          <option value="相良屋昌夫">相良屋昌夫</option>
+          <option value="吉田瑞季">吉田瑞季</option>
+          <option value='中島謙一郎'>中島謙一郎</option>
+          <option value='その他'>その他</option>
+          {/* {data.doushis.map((doushi, index) => (
             <option key={index} value={doushi}>
-              {doushi}
+              {doushi} 
             </option>
-          ))}
+          ))} */}
         </select>
         <label htmlFor="onkyo">音響:</label>
         <select style={{ width: "30%", height: "30px", marginTop: "5px", marginBottom: "5px", marginRight: "10px" }}
