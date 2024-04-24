@@ -100,13 +100,13 @@ const SearchComponent = ({ events, data, onSearch }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
-  useEffect(() => {
-    if (data) {
-      console.log(data.onkyos);
-      console.log(data.gyouji);
-  
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   if (data) {
+  //     console.log(data.onkyos);
+  //     console.log(data.gyouji);
+
+  //   }
+  // }, [data]);
 
   const handleSearch = () => {
     const searchTerm = `${selectedGyouji} ${selectedDoushi} ${selectedOnkyo}`;
@@ -121,18 +121,18 @@ const SearchComponent = ({ events, data, onSearch }) => {
     today.setHours(0, 0, 0, 0);
 
     const sortedResults = filteredResults
-    .filter(
-      (event) =>
-        isValidDate(event.start) &&
-        isValidDate(event.end) &&
-        event.end >= today
-    )
-    .sort((a, b) => a.start - b.start);
+      .filter(
+        (event) =>
+          isValidDate(event.start) &&
+          isValidDate(event.end) &&
+          event.end >= today
+      )
+      .sort((a, b) => a.start - b.start);
 
-  setSearchResults(sortedResults);
-  setShowPopup(true);
-  onSearch(searchTerm.trim());
-    
+    setSearchResults(sortedResults);
+    setShowPopup(true);
+    onSearch(searchTerm.trim());
+
     // setSearchResults(filteredResults);
     // setShowPopup(true);
     // onSearch(searchTerm.trim());
@@ -147,7 +147,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
     setSearchResults([]);
     setSelectedGyouji(''); // Reset the selectedGyouji state
     setSelectedDoushi(''); // Reset the selectedDoushi state
-    setSelectedOnkyo(''); 
+    setSelectedOnkyo('');
   };
 
   return (
@@ -193,11 +193,24 @@ const SearchComponent = ({ events, data, onSearch }) => {
           onChange={(e) => setSelectedOnkyo(e.target.value)}
         >
           <option value="">音響選択</option>
-          {data.onkyos.map((onkyo, index) => (
+          <option value="油井房雄">油井房雄</option>
+          <option value='相良屋昌夫'>相良屋昌夫</option>
+          <option value="北村かおり">北村かおり</option>
+          <option value="豊田奈奈美">豊田奈奈美</option>
+          <option value="渡辺聖子">渡辺聖子</option>
+          <option value="野口佐知子">野口佐知子</option>
+          <option value="土谷恵">土谷恵</option>
+          <option value="中島真美">中島真美</option>
+          <option value="神えり">神えり</option>
+          <option value="大森美都里">大森美都里</option>
+          <option value='武藤啓子'>武藤啓子</option>
+          <option value='その他'>その他</option>
+          <option value=''></option>
+          {/* {data.onkyos.map((onkyo, index) => (
             <option key={index} value={onkyo}>
               {onkyo}
             </option>
-          ))}
+          ))} */}
         </select>
       </div>
       <div>
@@ -208,11 +221,44 @@ const SearchComponent = ({ events, data, onSearch }) => {
           onChange={(e) => setSelectedGyouji(e.target.value)}
         >
           <option value="">行事選択</option>
+          <option value="「復活の祈り」">「復活の祈り」</option>
+          <option value='七の日感謝祭'>七の日感謝祭</option>
+          <option value="発展・繁栄系祈願祭">発展・繁栄系祈願祭</option>
+          <option value="降魔・病気平癒系祈願祭">降魔・病気平癒系祈願祭</option>
+          <option value="The Missionミーティング">The Missionミーティング</option>
+          <option value="「心の修行」">「心の修行」</option>
+          <option value="百歳会">百歳会</option>
+          <option value="いま学びたい御法話セミナー">いま学びたい御法話セミナー</option>
+          <option value="エンゼルプラン">エンゼルプラン</option>
+          <option value="サクセスNo.1">サクセスNo.1</option>
+          <option value="親子">親子</option>
+          <option value="御法話拝聴会">御法話拝聴会</option>
+          <option value="映画上映会">「映画上映会</option>
+          <option value='伝道ー御法話拝聴会'>伝道ー御法話拝聴会</option>
+          <option value="新復活祭">新復活祭</option>
+          <option value="ヘルメス大祭">ヘルメス大祭</option>
+          <option value="5月研修">5月研修</option>
+          <option value="家庭ユートピア祈願大祭">家庭ユートピア祈願大祭</option>
+          <option value="幸福供養祭">幸福供養祭</option>
+          <option value="大悟祭">大悟祭</option>
+          <option value="初転法輪記念祭">初転法輪記念祭</option>
+          <option value="御生誕祭">御生誕祭</option>
+          <option value='エル・カンターレ祭'>エル・カンターレ祭</option>
+          <option value='街宣'>街宣</option>
+          <option value='外部講師セミナー'>外部講師セミナー</option>
+          <option value="本部行事">本部行事</option>
+          <option value="集い">集い</option>
+          <option value='地区会'>地区会</option>
+          <option value='チーム会'>チーム会</option>
+          <option value='ふれあい'>ふれあい</option>
+          <option value='その他'>その他</option>
+          <option value=''></option>
+          {/* <option value="">行事選択</option>
           {data.gyouji.map((gyouji, index) => (
             <option key={index} value={gyouji}>
               {gyouji}
             </option>
-          ))}
+          ))} */}
         </select>
       </div>
 
@@ -236,7 +282,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
                 <br />
               </div>
             ))}
-            <button style={{ width: "30%", height: "30px", marginTop: "5px", marginLeft: "30%" }}onClick={handleClosePopup}>戻る</button>
+            <button style={{ width: "30%", height: "30px", marginTop: "5px", marginLeft: "30%" }} onClick={handleClosePopup}>戻る</button>
           </div>
         </div>
       )}
