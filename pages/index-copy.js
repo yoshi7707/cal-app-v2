@@ -16,10 +16,12 @@ const DragAndDropCalendar = withDragAndDrop(Calendar)
 
 import { dateFnsLocalizer } from 'react-big-calendar';
 import dateFns from 'date-fns';
-import format from "date-fns/format";
+// import format from "date-fns/format";
 import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
+
+import { format, parseISO } from 'date-fns';
 
 import { setHours, setMinutes } from 'date-fns';
 
