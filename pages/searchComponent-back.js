@@ -100,6 +100,14 @@ const SearchComponent = ({ events, data, onSearch }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
 
+    useEffect(() => {
+    if (data) {
+      console.log(data.onkyos);
+      console.log(data.gyouji);
+
+    }
+  }, [data]);
+
   const handleSearch = () => {
     const searchTerm = `${selectedGyouji} ${selectedDoushi} ${selectedOnkyo}`;
     const filteredResults = events.filter(
