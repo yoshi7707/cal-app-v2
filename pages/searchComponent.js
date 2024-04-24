@@ -16,8 +16,16 @@ const SearchComponent = ({ events, data, onSearch }) => {
         (selectedOnkyo && event.onkyo.includes(selectedOnkyo))
     );
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const sortedResults = filteredResults
-    .filter((event) => isValidDate(event.start) && isValidDate(event.end))
+    .filter(
+      (event) =>
+        isValidDate(event.start) &&
+        isValidDate(event.end) &&
+        event.end >= today
+    )
     .sort((a, b) => a.start - b.start);
 
   setSearchResults(sortedResults);
