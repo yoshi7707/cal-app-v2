@@ -53,6 +53,7 @@ const data = {
     '雨谷大',
     '吉田瑞季',
     '中島謙一郎',
+    '池田雅子',
     'その他',
   ],
   onkyos: [
@@ -262,7 +263,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
         </select>
       </div>
 
-      <button style={{ width: "30%", height: "30px", marginTop: "5px", marginBottom: "10px", marginRight: "10px" }} onClick={handleSearch}>検索ボタン</button>
+      <button style={{ width: "30%", height: "30px", marginTop: "5px", marginBottom: "20px", marginRight: "10px", borderRadius: "10px"}} onClick={handleSearch}>検索ボタン</button>
 
       {showPopup && (
         <div className="popup">

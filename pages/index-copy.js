@@ -14,8 +14,6 @@ const DragAndDropCalendar = withDragAndDrop(Calendar)
 // Storybook cannot alias this, so you would use 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
 // import '../react-big-calendar/src/addons/dragAndDrop/styles.scss'
 
-import SearchComponent from './searchComponent';
-
 import { dateFnsLocalizer } from 'react-big-calendar';
 import dateFns from 'date-fns';
 // import format from "date-fns/format";
@@ -23,7 +21,7 @@ import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 
-// import { format, parseISO } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 import { setHours, setMinutes } from 'date-fns';
 
@@ -137,6 +135,7 @@ const MyCalendar = () => {
       '雨谷大',
       '吉田瑞季',
       '中島謙一郎',
+      '池田雅子',
       'その他',
     ],
     onkyos: [
@@ -717,18 +716,6 @@ const MyCalendar = () => {
     console.log('Event pasted:', event);
   };
 
-  const [filteredEvents, setFilteredEvents] = useState(events);
-
-  const handleSearch = (searchTerm) => {
-    const filtered = events.filter(
-      (event) =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.doushi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.onkyo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredEvents(filtered);
-  };
-
   // const { components, defaultDate, max, views } = useMemo(
   //   () => ({
   //     components: {
@@ -744,8 +731,6 @@ const MyCalendar = () => {
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
-      <SearchComponent events={events} data={data} onSearch={handleSearch} />
-      {/* <SearchComponent events={events} onSearch={handleSearch} /> */}
       <form onSubmit={handleSubmit}>
         {showPopup && (
           <div className="popup">
@@ -924,8 +909,8 @@ const MyCalendar = () => {
         max={max}
         messages={{
           today: '今日',
-          previous: '◀️',
-          next: '▶️',
+          previous: '前へ',
+          next: '次へ',
           month: '月',
           week: '週',
           day: '日',
@@ -989,13 +974,13 @@ const MyCalendar = () => {
         // defaultDate={defaultDate}
         // views={views}
         // events={myEvents}
-        // onEventDrop={handleEventCopy}
+        onEventDrop={handleEventCopy}
         // resourceIdAccessor="resourceId"
         // resources={resourceMap}
         // resourceTitleAccessor="resourceTitle"
 
-        // onEventCopy={handleEventCopy}
-        // onEventPaste={handleEventPaste}
+        onEventCopy={handleEventCopy}
+        onEventPaste={handleEventPaste}
       />
 
       {isPopupVisible && (
@@ -1049,21 +1034,6 @@ const MyCalendar = () => {
               required
             />
             <br />
-            <label>導師：</label>
-{/* <input
-  list="doushis"
-  style={{ width: '50%', height: '30px', marginTop: '5px', marginLeft: '10px' }}
-  value={selectedEvent.doushi || ''}
-  onChange={(e) => handleEventChange('doushi', e.target.value)}
-  required
-/>
-<datalist id="doushis">
-  {data.doushis.map((doushi, index) => (
-    <option key={index} value={doushi}>
-      {doushi}
-    </option>
-  ))}
-</datalist> */}
             <label>導師：{selectedEvent.doushi || ''}</label>
             <select
               style={{
