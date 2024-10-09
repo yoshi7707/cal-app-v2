@@ -255,6 +255,8 @@ const SearchComponent = ({ events, data, onSearch }) => {
           <option value='地区会'>地区会</option>
           <option value='チーム会'>チーム会</option>
           <option value='ふれあい'>ふれあい</option>
+          <option value='伝道ミーティング'>伝道ミーティング</option>
+          <option value='植福ミーティング'>植福ミーティング</option>
           <option value='その他'>その他</option>
           <option value=''></option>
           {/* <option value="">行事選択</option>
