@@ -229,7 +229,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
           <option value='七の日感謝祭'>七の日感謝祭</option>
           <option value="発展・繁栄系祈願祭">発展・繁栄系祈願祭</option>
           <option value="降魔・病気平癒系祈願祭">降魔・病気平癒系祈願祭</option>
-          <option value="The Missionミーティング">The Missionミーティング</option>
+        <option value="「未来創造ミーティング」">「未来創造ミーティング」</option>
           <option value="「心の修行」">「心の修行」</option>
           <option value="百歳会">百歳会</option>
           <option value="いま学びたい御法話セミナー">いま学びたい御法話セミナー</option>
@@ -237,7 +237,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
           <option value="サクセスNo.1">サクセスNo.1</option>
           <option value="親子">親子</option>
           <option value="御法話拝聴会">御法話拝聴会</option>
-          <option value="映画上映会">「映画上映会</option>
+          <option value="映画上映会">「映画上映会」</option>
           <option value='伝道ー御法話拝聴会'>伝道ー御法話拝聴会</option>
           <option value="新復活祭">新復活祭</option>
           <option value="ヘルメス大祭">ヘルメス大祭</option>
@@ -248,6 +248,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
           <option value="初転法輪記念祭">初転法輪記念祭</option>
           <option value="御生誕祭">御生誕祭</option>
           <option value='エル・カンターレ祭'>エル・カンターレ祭</option>
+          <option value='降魔成道記念式典'>降魔成道記念式典</option>
           <option value='街宣'>街宣</option>
           <option value='外部講師セミナー'>外部講師セミナー</option>
           <option value="埼玉本部行事">本部行事</option>
@@ -257,6 +258,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
           <option value='ふれあい'>ふれあい</option>
           <option value='伝道ミーティング'>伝道ミーティング</option>
           <option value='植福ミーティング'>植福ミーティング</option>
+          <option value='ネバーマインド'>ネバーマインド</option>
           <option value='その他'>その他</option>
           <option value=''></option>
           {/* <option value="">行事選択</option>
