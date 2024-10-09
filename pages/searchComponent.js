@@ -27,11 +27,14 @@ const data = {
     'エル・カンターレ祭',
     '街宣',
     '外部講師セミナー',
-    '本部行事',
+    '埼玉本部行事',
     '集い',
     '地区会',
     'チーム会',
     'ふれあい',
+    '「未来創造ミーティング',
+    '伝道ミーティング',
+    '植福ミーティング',
     'その他'
   ],
   doushis: [
@@ -247,7 +250,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
           <option value='エル・カンターレ祭'>エル・カンターレ祭</option>
           <option value='街宣'>街宣</option>
           <option value='外部講師セミナー'>外部講師セミナー</option>
-          <option value="本部行事">本部行事</option>
+          <option value="埼玉本部行事">本部行事</option>
           <option value="集い">集い</option>
           <option value='地区会'>地区会</option>
           <option value='チーム会'>チーム会</option>
@@ -263,7 +266,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
         </select>
       </div>
 
-      <button style={{ width: "30%", height: "30px", marginTop: "5px", marginBottom: "20px", marginRight: "10px", borderRadius: "10px"}} onClick={handleSearch}>検索ボタン</button>
+      <button style={{ width: "30%", height: "30px", marginTop: "5px", marginBottom: "20px", marginRight: "10px", borderRadius: "10px" }} onClick={handleSearch}>検索ボタン</button>
 
       {showPopup && (
         <div className="popup">
