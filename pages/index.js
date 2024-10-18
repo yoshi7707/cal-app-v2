@@ -71,6 +71,8 @@ const MyCalendar = () => {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
 
+  const [isLoading, setIsLoading] = useState(true);
+
   const [isStartModified, setIsStartModified] = useState(false);
   const [isEndModified, setIsEndModified] = useState(false);
 
@@ -263,6 +265,8 @@ const MyCalendar = () => {
         const eventResponse = await fetch("/api/event", { cache: "no-store" });
         console.log('eventResponse', eventResponse);
         const eventData = await eventResponse.json();
+
+        setIsLoading(false)
         // setAllEvents(eventData);
         // setEvents(eventData)
         setEvents(eventData.map(event => ({
@@ -280,6 +284,7 @@ const MyCalendar = () => {
         console.log("Event->", events);
       } catch (error) {
         console.error("Error fetching events:", error);
+        setIsLoading(false)
       }
     }
     fetchData();
@@ -920,6 +925,9 @@ const MyCalendar = () => {
       </form>
 
       {/* <Calendar */}
+      {isLoading ? (
+        <p>データを取り出中です。少しお待ち下さい!</p>
+      ) : (
       <DragAndDropCalendar
         localizer={localizer}
         events={events}
@@ -1002,6 +1010,7 @@ const MyCalendar = () => {
         // onEventCopy={handleEventCopy}
         // onEventPaste={handleEventPaste}
       />
+      )}
 
       {isPopupVisible && (
         <div className="popup">
