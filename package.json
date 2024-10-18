@@ -25,6 +25,7 @@
     "react-scripts": "^3.0.1",
     "react-time-picker": "^6.6.0",
     "sass": "^1.75.0",
+    "typescript": "^5.6.3",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
