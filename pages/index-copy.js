@@ -7,6 +7,7 @@ moment.locale('ja');
 import * as dates from '../react-big-calendar/src/utils/dates'
 
 // import dateFns from 'date-fns';
+// import * as dateFns from 'date-fns';
 
 import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
@@ -68,6 +69,8 @@ const MyCalendar = () => {
   const [title, setTitle] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isStartModified, setIsStartModified] = useState(false);
   const [isEndModified, setIsEndModified] = useState(false);
@@ -263,7 +266,9 @@ const MyCalendar = () => {
         const eventResponse = await fetch("/api/event", { cache: "no-store" });
         console.log('eventResponse', eventResponse);
         const eventData = await eventResponse.json();
-        // setAllEvents(eventData);
+
+        setIsLoading(false)
+// setAllEvents(eventData);
         // setEvents(eventData)
         setEvents(eventData.map(event => ({
           id: event.id,
@@ -280,9 +285,11 @@ const MyCalendar = () => {
         console.log("Event->", events);
       } catch (error) {
         console.error("Error fetching events:", error);
+        setIsLoading(false);
       }
     }
     fetchData();
+    setIsLoading(false);
     // console.log("Event->", events); // Move the console.log here
   }, []);
 
@@ -906,6 +913,9 @@ const MyCalendar = () => {
       </form>
 
       {/* <Calendar */}
+      {isLoading ? (
+        <p>データを取り出中です。少しお待ち下さい!</p>
+      ) : (
       <DragAndDropCalendar
         localizer={localizer}
         events={events}
@@ -988,7 +998,7 @@ const MyCalendar = () => {
         onEventCopy={handleEventCopy}
         onEventPaste={handleEventPaste}
       />
-
+    )}
       {isPopupVisible && (
         <div className="popup">
           <div className="popup-inner">
