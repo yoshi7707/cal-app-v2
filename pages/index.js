@@ -927,7 +927,7 @@ const MyCalendar = () => {
 
       {/* <Calendar */}
       {isLoading ? (
-        <p>データを取り出中です。少しお待ち下さい!</p>
+        <a1>データを取得中です。少しお待ち下さい.....</a1>
       ) : (
       <DragAndDropCalendar
         localizer={localizer}
@@ -1191,12 +1191,14 @@ const MyCalendar = () => {
             </button>
           </div>
         </div>
-      )}
-      <button
+        
+
+       )}
+      {/* <button
         style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
         onClick={handleOpenPopup}>
         新規行事入力
-      </button>
+      </button> */}
     </div>
   );
 };
