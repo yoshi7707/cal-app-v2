@@ -927,7 +927,7 @@ const MyCalendar = () => {
 
       {/* <Calendar */}
       {isLoading ? (
-        <a1>データを取得中です。少しお待ち下さい.....</a1>
+        <h1 class="text-blue-600">データを取得中です。少しお待ち下さい.....😀</h1>
       ) : (
       <DragAndDropCalendar
         localizer={localizer}
