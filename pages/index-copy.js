@@ -144,6 +144,8 @@ const MyCalendar = () => {
       '雨谷大',
       '吉田瑞季',
       '中島謙一郎',
+      '根本美智子',
+      '吉田瑞季',
       '池田雅子',
       'その他',
     ],
@@ -185,8 +187,7 @@ const MyCalendar = () => {
     ],
   };
 
-//drug & copy proccess ==================================================
-
+  //drug & copy proccess ==================================================
 
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -200,7 +201,7 @@ const MyCalendar = () => {
         const eventData = await eventResponse.json();
 
         setIsLoading(false)
-// setAllEvents(eventData);
+        // setAllEvents(eventData);
         // setEvents(eventData)
         setEvents(eventData.map(event => ({
           id: event.id,
@@ -251,6 +252,12 @@ const MyCalendar = () => {
 
     // const adjustedStart = new Date(selectedDates.start.getTime() - (selectedDates.start.getTimezoneOffset() * 60000));
     // const adjustedEnd = new Date(selectedDates.end.getTime() - (selectedDates.end.getTimezoneOffset() * 60000));
+
+    // Check if end date is after start date
+    if (selectedDates.end <= selectedDates.start) {
+      alert('End time must be after the start time.');
+      return;
+    }
 
     const adjustedStart = new Date(selectedDates.start.getTime());
     const adjustedEnd = new Date(selectedDates.end.getTime());
@@ -476,7 +483,7 @@ const MyCalendar = () => {
             comment: event.comment,
           }),
         });
-  
+
         if (response.ok) {
           // Handle success response
           console.log('Event data updated successfully!');
@@ -503,7 +510,7 @@ const MyCalendar = () => {
 
   const [myEvents, setMyEvents] = useState(events)
 
-//drug & copy proccess ==================================================
+  //drug & copy proccess ==================================================
   // const [myEvents, setMyEvents] = useState(events)
   // const [copyEvent, setCopyEvent] = useState(true)
 
@@ -542,7 +549,7 @@ const MyCalendar = () => {
   //   },
   //   [setMyEvents, copyEvent]
   // )
-//drug & copy proccess ==================================================
+  //drug & copy proccess ==================================================
 
   const moveEvent = useCallback(
     async ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
@@ -550,9 +557,9 @@ const MyCalendar = () => {
       if (!allDay && droppedOnAllDaySlot) {
         event.allDay = true;
       }
-  
+
       const updatedEvent = { ...event, start, end, allDay };
-  
+
       try {
         // Make a PUT request to update the event data in the database
         const response = await fetch(`/api/event?id=${event.id}`, {
@@ -571,7 +578,7 @@ const MyCalendar = () => {
             comment: event.comment,
           }),
         });
-  
+
         if (response.ok) {
           // Handle success response
           console.log('Event data updated successfully!');
@@ -580,7 +587,7 @@ const MyCalendar = () => {
             const existingEvents = prev.filter((ev) => ev.id !== event.id);
             return [...existingEvents, updatedEvent];
           });
-  
+
           // Update events state
           setEvents((prev) => {
             const existingEvents = prev.filter((ev) => ev.id !== event.id);
@@ -603,7 +610,7 @@ const MyCalendar = () => {
       if (!allDay && droppedOnAllDaySlot) {
         event.allDay = true;
       }
-  
+
       // const adjustedStart = new Date(start.getTime() - (start.setHours(start.getHours() - 9)));
       // const adjustedEnd = new Date(end.getTime() - (end.setHours(end.getHours() - 9)));
       const adjustedStart = new Date(start.getTime() - (start.getTimezoneOffset() * 60000));
@@ -611,7 +618,7 @@ const MyCalendar = () => {
 
       adjustedStart.setHours(adjustedStart.getHours() - 9);
       adjustedEnd.setHours(adjustedEnd.getHours() - 9);
-  
+
       try {
         const eventData = {
           eventName: event.title,
@@ -624,7 +631,7 @@ const MyCalendar = () => {
           uketsuke: event.uketsuke,
           comment: event.comment,
         };
-  
+
         const response = await fetch('/api/event', {
           method: 'POST',
           headers: {
@@ -632,7 +639,7 @@ const MyCalendar = () => {
           },
           body: JSON.stringify(eventData),
         });
-  
+
         if (response.ok) {
           console.log('Event copied successfully!');
           fetchEvents(); // Fetch the updated event list from the server
@@ -847,145 +854,145 @@ const MyCalendar = () => {
       {isLoading ? (
         <h1 class="text-blue-600">データを取得中です。少しお待ち下さい.....😀</h1>
       ) : (
-      <DragAndDropCalendar
-        localizer={localizer}
-        events={events}
-        // events={eventsForCopy}
-        style={{ height: 1600 }}
-        min={min}
-        max={max}
-        messages={{
-          today: '今日',
-          previous: '前へ',
-          next: '次へ',
-          month: '月',
-          week: '週',
-          day: '日',
-          agenda: '予定'
-        }}
-        startAccessor="start"
-        endAccessor="end"
-        // onClick={handleSelectEvent(event)}
-        // onSelectEvent={(event) => setSelectedEvent(event)}
-        onSelectEvent={handleSelectEvent}
-        components={{
-          event: EventComponent // Use the custom EventComponent to render events
-        }}
-        // onSelectSlot={window.alert('Hello!')}
-        onSelectSlot={(slotInfo) => {
-          const { start, end } = slotInfo;
+        <DragAndDropCalendar
+          localizer={localizer}
+          events={events}
+          // events={eventsForCopy}
+          style={{ height: 1600 }}
+          min={min}
+          max={max}
+          messages={{
+            today: '今日',
+            previous: '前へ',
+            next: '次へ',
+            month: '月',
+            week: '週',
+            day: '日',
+            agenda: '予定'
+          }}
+          startAccessor="start"
+          endAccessor="end"
+          // onClick={handleSelectEvent(event)}
+          // onSelectEvent={(event) => setSelectedEvent(event)}
+          onSelectEvent={handleSelectEvent}
+          components={{
+            event: EventComponent // Use the custom EventComponent to render events
+          }}
+          // onSelectSlot={window.alert('Hello!')}
+          onSelectSlot={(slotInfo) => {
+            const { start, end } = slotInfo;
 
-          // const adjustedStart = localizerFnc.startOfDay(start);
-          // const adjustedEnd = localizerFnc.endOfDay(end);
-          const adjustedStart = new Date(start.getTime() - (start.getTimezoneOffset() * 60000));
-          const adjustedEnd = new Date(end.getTime() - (end.getTimezoneOffset() * 60000));
+            // const adjustedStart = localizerFnc.startOfDay(start);
+            // const adjustedEnd = localizerFnc.endOfDay(end);
+            const adjustedStart = new Date(start.getTime() - (start.getTimezoneOffset() * 60000));
+            const adjustedEnd = new Date(end.getTime() - (end.getTimezoneOffset() * 60000));
 
-          // adjustedStart.setHours(adjustedStart.getHours() + 9);
-          // adjustedEnd.setHours(adjustedEnd.getHours() + 9);
+            // adjustedStart.setHours(adjustedStart.getHours() + 9);
+            // adjustedEnd.setHours(adjustedEnd.getHours() + 9);
 
-          setShowPopup(true);
-          setSelectedDates({ start: adjustedStart, end: adjustedEnd });
-          setSelectedEvent({
-            title: "",
-            doushi: "",
-            onkyo: "",
-            shikai: "",
-            uketsuke: "",
-            comment: "",
-          });
-          // setSelectedDates({ start, end });
-          // Handle the selection of an empty slot here
-          // You can open a popup or modal with the start and end dates pre-filled in input boxes
-          // You can use the start and end dates to pre-fill the input boxes in your popup
-          console.log('Selected slot:', start, end);
-        }}
-        eventPropGetter={(event) => {
-          if (event.title === "「復活の祈り」") {
-            return {
-              style: {
-                backgroundColor: 'red', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "埼玉本部行事") {
-            return {
-              style: {
-                backgroundColor: 'pink', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "支部長会議") {
-            return {
-              style: {
-                backgroundColor: 'pink', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "「心の修行」") {
-            return {
-              style: {
-                backgroundColor: 'purple', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "外部講師セミナー") {
-            return {
-              style: {
-                backgroundColor: 'green', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "その他") {
-            return {
-              style: {
-                backgroundColor: 'brown', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "発展・繁栄系祈願祭") {
-            return {
-              style: {
-                backgroundColor: 'orange', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "降魔・病気平癒系祈願祭") {
-            return {
-              style: {
-                backgroundColor: 'orange', // This sets the text color to red
-              }
-            };
-          }
-          if (event.title === "いま学びたい御法話セミナー") {
-            return {
-              style: {
-                backgroundColor: 'navy', // This sets the text color to red
-              }
-            };
-          }
-          return {}; // Return empty for events that don't match
-        }}
-        showMultiDayTimes
-        popup={true}
-        selectable
-        resizable
-        scrollToTime={scrollToTime}
-        onEventResize={resizeEvent}
-        // events={myEvents}
-        // onEventDrop={moveEvent}
-        // showMultiDayTimes
-        // defaultDate={defaultDate}
-        // views={views}
-        // events={myEvents}
-        onEventDrop={handleEventCopy}
-        // resourceIdAccessor="resourceId"
-        // resources={resourceMap}
-        // resourceTitleAccessor="resourceTitle"
+            setShowPopup(true);
+            setSelectedDates({ start: adjustedStart, end: adjustedEnd });
+            setSelectedEvent({
+              title: "",
+              doushi: "",
+              onkyo: "",
+              shikai: "",
+              uketsuke: "",
+              comment: "",
+            });
+            // setSelectedDates({ start, end });
+            // Handle the selection of an empty slot here
+            // You can open a popup or modal with the start and end dates pre-filled in input boxes
+            // You can use the start and end dates to pre-fill the input boxes in your popup
+            console.log('Selected slot:', start, end);
+          }}
+          eventPropGetter={(event) => {
+            if (event.title === "「復活の祈り」") {
+              return {
+                style: {
+                  backgroundColor: 'red', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "埼玉本部行事") {
+              return {
+                style: {
+                  backgroundColor: 'pink', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "支部長会議") {
+              return {
+                style: {
+                  backgroundColor: 'pink', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "「心の修行」") {
+              return {
+                style: {
+                  backgroundColor: 'purple', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "外部講師セミナー") {
+              return {
+                style: {
+                  backgroundColor: 'green', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "その他") {
+              return {
+                style: {
+                  backgroundColor: 'brown', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "発展・繁栄系祈願祭") {
+              return {
+                style: {
+                  backgroundColor: 'orange', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "降魔・病気平癒系祈願祭") {
+              return {
+                style: {
+                  backgroundColor: 'orange', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "いま学びたい御法話セミナー") {
+              return {
+                style: {
+                  backgroundColor: 'navy', // This sets the text color to red
+                }
+              };
+            }
+            return {}; // Return empty for events that don't match
+          }}
+          showMultiDayTimes
+          popup={true}
+          selectable
+          resizable
+          scrollToTime={scrollToTime}
+          onEventResize={resizeEvent}
+          // events={myEvents}
+          // onEventDrop={moveEvent}
+          // showMultiDayTimes
+          // defaultDate={defaultDate}
+          // views={views}
+          // events={myEvents}
+          onEventDrop={handleEventCopy}
+          // resourceIdAccessor="resourceId"
+          // resources={resourceMap}
+          // resourceTitleAccessor="resourceTitle"
 
-        onEventCopy={handleEventCopy}
-        onEventPaste={handleEventPaste}
-      />
-    )}
+          onEventCopy={handleEventCopy}
+          onEventPaste={handleEventPaste}
+        />
+      )}
       {isPopupVisible && (
         <div className="popup">
           <div className="popup-inner">
