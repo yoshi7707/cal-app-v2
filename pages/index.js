@@ -989,6 +989,83 @@ const MyCalendar = () => {
               }
             };
           }
+          if (event.title === "埼玉本部行事") {
+            return {
+              style: {
+                backgroundColor: 'pink', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "支部長会議") {
+            return {
+              style: {
+                backgroundColor: 'pink', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "「心の修行」") {
+            return {
+              style: {
+                backgroundColor: 'purple', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "外部講師セミナー") {
+            return {
+              style: {
+                backgroundColor: 'green', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "その他") {
+            return {
+              style: {
+                backgroundColor: 'brown', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "発展・繁栄系祈願祭") {
+            return {
+              style: {
+                backgroundColor: 'orange', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "降魔・病気平癒系祈願祭") {
+            return {
+              style: {
+                backgroundColor: 'orange', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "いま学びたい御法話セミナー") {
+            return {
+              style: {
+                backgroundColor: 'navy', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "「未来創造ミーティング」") {
+            return {
+              style: {
+                backgroundColor: 'gray', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "伝道ミーティング") {
+            return {
+              style: {
+                backgroundColor: 'gray', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "植福ミーティング") {
+            return {
+              style: {
+                backgroundColor: 'gray', // This sets the text color to red
+              }
+            };
+          }
           return {}; // Return empty for events that don't match
         }}
         showMultiDayTimes

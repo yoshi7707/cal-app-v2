@@ -914,7 +914,7 @@ const MyCalendar = () => {
 
       {/* <Calendar */}
       {isLoading ? (
-        <p>データを取り出中です。少しお待ち下さい!</p>
+        <h1 class="text-blue-600">データを取得中です。少しお待ち下さい.....😀</h1>
       ) : (
       <DragAndDropCalendar
         localizer={localizer}
@@ -973,6 +973,62 @@ const MyCalendar = () => {
             return {
               style: {
                 backgroundColor: 'red', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "埼玉本部行事") {
+            return {
+              style: {
+                backgroundColor: 'pink', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "支部長会議") {
+            return {
+              style: {
+                backgroundColor: 'pink', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "「心の修行」") {
+            return {
+              style: {
+                backgroundColor: 'purple', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "外部講師セミナー") {
+            return {
+              style: {
+                backgroundColor: 'green', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "その他") {
+            return {
+              style: {
+                backgroundColor: 'brown', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "発展・繁栄系祈願祭") {
+            return {
+              style: {
+                backgroundColor: 'orange', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "降魔・病気平癒系祈願祭") {
+            return {
+              style: {
+                backgroundColor: 'orange', // This sets the text color to red
+              }
+            };
+          }
+          if (event.title === "いま学びたい御法話セミナー") {
+            return {
+              style: {
+                backgroundColor: 'navy', // This sets the text color to red
               }
             };
           }
