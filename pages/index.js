@@ -507,45 +507,6 @@ const MyCalendar = () => {
   const [myEvents, setMyEvents] = useState(events)
 
   //drug & copy proccess ==================================================
-  // const [myEvents, setMyEvents] = useState(events)
-  // const [copyEvent, setCopyEvent] = useState(true)
-
-  // const toggleCopyEvent = useCallback(() => setCopyEvent((val) => !val), [])
-
-  // const moveEvent = useCallback(
-  //   ({
-  //     event,
-  //     start,
-  //     end,
-  //     resourceId,
-  //     isAllDay: droppedOnAllDaySlot = false,
-  //   }) => {
-  //     const { allDay } = event
-  //     if (!allDay && droppedOnAllDaySlot) {
-  //       event.allDay = true
-  //     }
-  //     if (Array.isArray(event.resourceId)) {
-  //       if (copyEvent) {
-  //         resourceId = [...new Set([...event.resourceId, resourceId])]
-  //       } else {
-  //         const filtered = event.resourceId.filter(
-  //           (ev) => ev !== event.sourceResource
-  //         )
-  //         resourceId = [...new Set([...filtered, resourceId])]
-  //       }
-  //     } else if (copyEvent) {
-  //       resourceId = [...new Set([event.resourceId, resourceId])]
-  //     }
-
-  //     setMyEvents((prev) => {
-  //       const existing = prev.find((ev) => ev.id === event.id) ?? {}
-  //       const filtered = prev.filter((ev) => ev.id !== event.id)
-  //       return [...filtered, { ...existing, start, end, resourceId, allDay }]
-  //     })
-  //   },
-  //   [setMyEvents, copyEvent]
-  // )
-  //drug & copy proccess ==================================================
 
   const moveEvent = useCallback(
     async ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
