@@ -667,14 +667,6 @@ const MyCalendar = () => {
                 }}
                 required
               />
-              {/* <input
-                                type="datetime-local"
-                                value={selectedDates.start ? selectedDates.start.toISOString().slice(0, 16) : ''}
-                                style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                                // onChange={(e) => setStart(e.target.value)}
-                                onChange={(e) => setStart(e.target.value)}
-                                required
-                            /> */}
               <br /> {/* 改行を挿入 */}
               <label>終了時間：{selectedDates.end ? selectedDates.end.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}</label>
               <input
