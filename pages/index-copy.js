@@ -6,9 +6,6 @@ import 'moment/locale/ja';
 moment.locale('ja');
 import * as dates from '../react-big-calendar/src/utils/dates'
 
-// import dateFns from 'date-fns';
-// import * as dateFns from 'date-fns';
-
 import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
 
