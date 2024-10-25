@@ -41,12 +41,6 @@ const localizerFnc = dateFnsLocalizer({
   // locales,
 });
 
-// const localizerFnc = dateFnsLocalizer(dateFns, {
-//   startOfWeek: (start) => new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0),
-// });
-
-// import PropTypes from 'prop-types'
-
 import styles from '../styles/App.module.css';
 
 // import "../styles/App.module.css";
