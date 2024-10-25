@@ -628,18 +628,6 @@ const MyCalendar = () => {
     console.log('Event pasted:', event);
   };
 
-  // const { components, defaultDate, max, views } = useMemo(
-  //   () => ({
-  //     components: {
-  //       timeSlotWrapper: ColoredDateCellWrapper,
-  //     },
-  //     defaultDate: new Date(2015, 3, 1),
-  //     max: dates.add(dates.endOf(new Date(2015, 17, 1), 'day'), -1, 'hours'),
-  //     views: Object.keys(Views).map((k) => Views[k]),
-  //   }),
-  //   []
-  // )
-
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
