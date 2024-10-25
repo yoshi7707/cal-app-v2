@@ -26,12 +26,6 @@ import { format, parseISO } from 'date-fns';
 
 import { setHours, setMinutes } from 'date-fns';
 
-// import enUS from 'date-fns/locale/en-US'
-
-// const localizer = dateFnsLocalizer(dateFns, {
-//   format: 'yyyy/MM/dd',
-// });
-
 const localizerFnc = dateFnsLocalizer({
   dateFns,
   format: 'yyyy/MM/dd',
