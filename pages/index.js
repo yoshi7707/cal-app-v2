@@ -187,75 +187,6 @@ const MyCalendar = () => {
 
   //drug & copy proccess ==================================================
 
-  // const eventsForCopy = [
-  //   {
-  //     id: 0,
-  //     title: 'Board meeting',
-  //     start: new Date(2018, 0, 29, 9, 0, 0),
-  //     end: new Date(2018, 0, 29, 13, 0, 0),
-  //     resourceId: [1, 2],
-  //   },
-  //   {
-  //     id: 1,
-  //     title: 'MS training',
-  //     start: new Date(2018, 0, 29, 14, 0, 0),
-  //     end: new Date(2018, 0, 29, 16, 30, 0),
-  //     resourceId: 2,
-  //   },
-  //   {
-  //     id: 2,
-  //     title: 'Team lead meeting',
-  //     start: new Date(2018, 0, 29, 8, 30, 0),
-  //     end: new Date(2018, 0, 29, 12, 30, 0),
-  //     resourceId: 3,
-  //   },
-  //   {
-  //     id: 10,
-  //     title: 'Board meeting',
-  //     start: new Date(2018, 0, 30, 23, 0, 0),
-  //     end: new Date(2018, 0, 30, 23, 59, 0),
-  //     resourceId: 1,
-  //   },
-  //   {
-  //     id: 11,
-  //     title: 'Birthday Party',
-  //     start: new Date(2018, 0, 30, 7, 0, 0),
-  //     end: new Date(2018, 0, 30, 10, 30, 0),
-  //     resourceId: 4,
-  //   },
-  //   {
-  //     id: 12,
-  //     title: 'Board meeting',
-  //     start: new Date(2018, 0, 29, 23, 59, 0),
-  //     end: new Date(2018, 0, 30, 13, 0, 0),
-  //     resourceId: 1,
-  //   },
-  //   {
-  //     id: 13,
-  //     title: 'Board meeting',
-  //     start: new Date(2018, 0, 29, 23, 50, 0),
-  //     end: new Date(2018, 0, 30, 13, 0, 0),
-  //     resourceId: 2,
-  //   },
-  //   {
-  //     id: 14,
-  //     title: 'Board meeting',
-  //     start: new Date(2018, 0, 29, 23, 40, 0),
-  //     end: new Date(2018, 0, 30, 13, 0, 0),
-  //     resourceId: 4,
-  //   },
-  // ]
-
-  // const resourceMap = [
-  //   { resourceId: 1, resourceTitle: 'Board room' },
-  //   { resourceId: 2, resourceTitle: 'Training room' },
-  //   { resourceId: 3, resourceTitle: 'Meeting room 1' },
-  //   { resourceId: 4, resourceTitle: 'Meeting room 2' },
-  // ]
-
-  //drug & copy proccess ==================================================
-
-
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -576,45 +507,6 @@ const MyCalendar = () => {
   const [myEvents, setMyEvents] = useState(events)
 
   //drug & copy proccess ==================================================
-  // const [myEvents, setMyEvents] = useState(events)
-  // const [copyEvent, setCopyEvent] = useState(true)
-
-  // const toggleCopyEvent = useCallback(() => setCopyEvent((val) => !val), [])
-
-  // const moveEvent = useCallback(
-  //   ({
-  //     event,
-  //     start,
-  //     end,
-  //     resourceId,
-  //     isAllDay: droppedOnAllDaySlot = false,
-  //   }) => {
-  //     const { allDay } = event
-  //     if (!allDay && droppedOnAllDaySlot) {
-  //       event.allDay = true
-  //     }
-  //     if (Array.isArray(event.resourceId)) {
-  //       if (copyEvent) {
-  //         resourceId = [...new Set([...event.resourceId, resourceId])]
-  //       } else {
-  //         const filtered = event.resourceId.filter(
-  //           (ev) => ev !== event.sourceResource
-  //         )
-  //         resourceId = [...new Set([...filtered, resourceId])]
-  //       }
-  //     } else if (copyEvent) {
-  //       resourceId = [...new Set([event.resourceId, resourceId])]
-  //     }
-
-  //     setMyEvents((prev) => {
-  //       const existing = prev.find((ev) => ev.id === event.id) ?? {}
-  //       const filtered = prev.filter((ev) => ev.id !== event.id)
-  //       return [...filtered, { ...existing, start, end, resourceId, allDay }]
-  //     })
-  //   },
-  //   [setMyEvents, copyEvent]
-  // )
-  //drug & copy proccess ==================================================
 
   const moveEvent = useCallback(
     async ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
@@ -744,18 +636,6 @@ const MyCalendar = () => {
     );
     setFilteredEvents(filtered);
   };
-
-  // const { components, defaultDate, max, views } = useMemo(
-  //   () => ({
-  //     components: {
-  //       timeSlotWrapper: ColoredDateCellWrapper,
-  //     },
-  //     defaultDate: new Date(2015, 3, 1),
-  //     max: dates.add(dates.endOf(new Date(2015, 17, 1), 'day'), -1, 'hours'),
-  //     views: Object.keys(Views).map((k) => Views[k]),
-  //   }),
-  //   []
-  // )
 
   return (
     <div className={styles.App}>
