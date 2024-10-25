@@ -568,8 +568,6 @@ const MyCalendar = () => {
         event.allDay = true;
       }
 
-      // const adjustedStart = new Date(start.getTime() - (start.setHours(start.getHours() - 9)));
-      // const adjustedEnd = new Date(end.getTime() - (end.setHours(end.getHours() - 9)));
       const adjustedStart = new Date(start.getTime() - (start.getTimezoneOffset() * 60000));
       const adjustedEnd = new Date(end.getTime() - (end.getTimezoneOffset() * 60000));
 
