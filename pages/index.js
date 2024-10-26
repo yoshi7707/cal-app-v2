@@ -246,10 +246,6 @@ const MyCalendar = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    // const adjustedStart = new Date(selectedDates.start.getTime() - (selectedDates.start.getTimezoneOffset() * 60000));
-    // const adjustedEnd = new Date(selectedDates.end.getTime() - (selectedDates.end.getTimezoneOffset() * 60000));
-
     // Check if end date is after start date
     if (selectedDates.end <= selectedDates.start) {
       alert('End time must be after the start time.');
