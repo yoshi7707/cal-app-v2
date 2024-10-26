@@ -231,9 +231,17 @@ const MyCalendar = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  // Check if end date is after start date
+    // Check if end date is after start date
     if (selectedDates.end <= selectedDates.start) {
       alert('End time must be after the start time.');
+      return;
+    }
+
+    // 1 day in milliseconds
+    const oneDay = 23 * 60 * 60 * 1000;
+
+    if (selectedDates.end - selectedDates.start > oneDay) {
+      alert('End time must be more than one day after the start time.');
       return;
     }
 
