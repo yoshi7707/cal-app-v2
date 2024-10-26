@@ -6,9 +6,6 @@ import 'moment/locale/ja';
 moment.locale('ja');
 import * as dates from '../react-big-calendar/src/utils/dates'
 
-// import dateFns from 'date-fns';
-// import * as dateFns from 'date-fns';
-
 import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
 
@@ -34,12 +31,6 @@ const localizerFnc = dateFnsLocalizer({
   getDay,
   // locales,
 });
-
-// const localizerFnc = dateFnsLocalizer(dateFns, {
-//   startOfWeek: (start) => new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0),
-// });
-
-// import PropTypes from 'prop-types'
 
 import styles from '../styles/App.module.css';
 
