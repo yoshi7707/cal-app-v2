@@ -9,9 +9,6 @@ import * as dates from '../react-big-calendar/src/utils/dates'
 import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
 
-// Storybook cannot alias this, so you would use 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
-// import '../react-big-calendar/src/addons/dragAndDrop/styles.scss'
-
 import { dateFnsLocalizer } from 'react-big-calendar';
 import dateFns from 'date-fns';
 // import format from "date-fns/format";
