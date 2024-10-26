@@ -255,6 +255,15 @@ const MyCalendar = () => {
       alert('End time must be after the start time.');
       return;
     }
+
+    // 1 day in milliseconds
+    const oneDay = 23 * 60 * 60 * 1000;
+
+    if (selectedDates.end - selectedDates.start > oneDay) {
+      alert('End time must be more than one day after the start time.');
+      return;
+    }
+
     const adjustedStart = new Date(selectedDates.start.getTime());
     const adjustedEnd = new Date(selectedDates.end.getTime());
 
