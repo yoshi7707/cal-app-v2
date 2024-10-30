@@ -238,18 +238,18 @@ const MyCalendar = () => {
     }
 
     // 1 day in milliseconds
-const oneDay = 24 * 60 * 60 * 1000;
+    const oneDay = 24 * 60 * 60 * 1000;
 
-if (selectedDates.end - selectedDates.start >= oneDay) {
-  const confirmResponse = confirm('End time must be more than one day after the start time. Do you want to proceed?');
-  
-  if (!confirmResponse) {
-    // If user clicks "Cancel", exit the function
-    return;
-  }
-  
-  // If user clicks "OK", continue with the function
-}
+    if (selectedDates.end - selectedDates.start >= oneDay) {
+      const confirmResponse = confirm('End time must be more than one day after the start time. Do you want to proceed?');
+
+      if (!confirmResponse) {
+        // If user clicks "Cancel", exit the function
+        return;
+      }
+
+      // If user clicks "OK", continue with the function
+    }
 
 
     // // 1 day in milliseconds
