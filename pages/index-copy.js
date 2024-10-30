@@ -238,10 +238,10 @@ const MyCalendar = () => {
     }
 
     // 1 day in milliseconds
-    const oneDay = 24 * 60 * 60 * 1000;
+    const oneDay = 4 * 60 * 60 * 1000;
 
     if (selectedDates.end - selectedDates.start >= oneDay) {
-      const confirmResponse = confirm('End time must be more than one day after the start time. Do you want to proceed?');
+      const confirmResponse = confirm('End time must be more 4hrs than one day after the start time. Do you want to proceed?');
 
       if (!confirmResponse) {
         // If user clicks "Cancel", exit the function
