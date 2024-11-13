@@ -16,6 +16,7 @@ const DragAndDropCalendar = withDragAndDrop(Calendar)
 // import '../react-big-calendar/src/addons/dragAndDrop/styles.scss'
 
 import SearchComponent from './searchComponent';
+import SearchPrayerForResurrection from './searchPrayerForResurrection';
 
 import { dateFnsLocalizer } from 'react-big-calendar';
 import dateFns from 'date-fns';
@@ -652,6 +653,7 @@ const MyCalendar = () => {
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
       <SearchComponent events={events} data={data} onSearch={handleSearch} />
+      <SearchPrayerForResurrection events={events} data={data} onSearch={handleSearch} />
       {/* <SearchComponent events={events} onSearch={handleSearch} /> */}
       <form onSubmit={handleSubmit}>
         {showPopup && (
