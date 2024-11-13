@@ -116,7 +116,7 @@ const SearchComponent = ({ events, data, onSearch }) => {
   return (
     <div>
 
-      <button style={{ width: "30%", height: "30px", marginTop: "5px", marginBottom: "20px", marginRight: "10px", borderRadius: "10px" }} onClick={handleSearch}>検索ボタン</button>
+      <button style={{ width: "10%", height: "30px", marginTop: "5px", marginBottom: "20px", marginRight: "10px", borderRadius: "10px" }} onClick={handleSearch}>「復活の祈り」</button>
 
       {showPopup && (
         <div className="popup">
@@ -125,9 +125,9 @@ const SearchComponent = ({ events, data, onSearch }) => {
             <br />
             {searchResults.map((event, index) => (
               <div key={index}>
-                <h4>{event.title}</h4>
-                <p>開始時間: {event.start.toLocaleString()}</p>
-                <p>終了時間: {event.end.toLocaleString()}</p>
+                {/* <h4>{event.title}</h4> */}
+                <p> {event.start.toLocaleString()}</p>
+                {/* <p>終了時間: {event.end.toLocaleString()}</p> */}
                 <p>導師: {event.doushi}</p>
                 <p>音響: {event.onkyo}</p>
                 <br />
