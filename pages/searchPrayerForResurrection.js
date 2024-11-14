@@ -166,7 +166,7 @@
 //             }}>
 //               下に"戻る"ボタンがあります！！
 //             </h3>
-            
+
 //             <div style={{ marginTop: '1.5rem' }}>
 //               {sortedEvents.length > 0 ? (
 //                 sortedEvents.map((event, index) => (
@@ -203,7 +203,7 @@
 //                 </p>
 //               )}
 //             </div>
-            
+
 //             <div style={{ 
 //               marginTop: '1.5rem',
 //               textAlign: 'center'
@@ -266,16 +266,33 @@ const DisplayComponent = ({ events = [] }) => {
     setShowPopup(false);
   };
 
+  const handleCopy = () => {
+    const textToCopy = sortedEvents.map(event => (
+      `行事: ${event.title}\n` +
+      `日時: ${event.start.toLocaleString()}\n` +
+      `導師: ${event.doushi}\n` +
+      `音響: ${event.onkyo}\n` +
+      '------------------------'
+    )).join('\n');
+
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000); // Reset success message after 2 seconds
+      })
+      .catch(err => console.error('Failed to copy text: ', err));
+  };
+
   return (
     <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
-      <button 
+      <button
         onClick={handleDisplay}
-        style={{ 
-          width: '120px', 
-          height: '30px', 
-          marginTop: '5px', 
-          marginBottom: '20px', 
-          marginRight: '10px', 
+        style={{
+          width: '120px',
+          height: '30px',
+          marginTop: '5px',
+          marginBottom: '20px',
+          marginRight: '10px',
           borderRadius: '10px',
           backgroundColor: '#3490dc',
           color: 'white',
@@ -311,28 +328,57 @@ const DisplayComponent = ({ events = [] }) => {
             position: 'relative',  // Added position relative
             zIndex: 10000  // Added even higher z-index for the content
           }}>
-            <h3 style={{ 
-              fontSize: '1.25rem', 
-              fontWeight: 'bold', 
-              marginBottom: '1rem',
+
+            <div style={{
+              marginTop: '1.5rem',
               textAlign: 'center'
             }}>
-              下に"戻る"ボタンがあります！！
-            </h3>
-            
+              <button
+                onClick={handleClosePopup}
+                style={{
+                  width: '30%',
+                  height: '30px',
+                  borderRadius: '8px',
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                戻る
+              </button>
+            {/* </div> */}
+
+            <button
+              onClick={handleCopy}
+              style={{
+                padding: '5px 15px',
+                marginLeft: '1rem',
+                borderRadius: '5px',
+                backgroundColor: '#10B981',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.875rem'
+              }}
+            >
+              コピー
+            </button>
+            </div>
+
             <div style={{ marginTop: '1.5rem' }}>
               {sortedEvents.length > 0 ? (
                 sortedEvents.map((event, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     style={{
                       borderBottom: index < sortedEvents.length - 1 ? '1px solid #e2e8f0' : 'none',
                       paddingBottom: '1rem',
                       marginBottom: '1rem'
                     }}
                   >
-                    <h4 style={{ 
-                      fontSize: '1.125rem', 
+                    <h4 style={{
+                      fontSize: '1.125rem',
                       fontWeight: '600',
                       color: '#2563eb',
                       marginBottom: '0.5rem'
@@ -356,8 +402,8 @@ const DisplayComponent = ({ events = [] }) => {
                 </p>
               )}
             </div>
-            
-            <div style={{ 
+
+            {/* <div style={{ 
               marginTop: '1.5rem',
               textAlign: 'center'
             }}>
@@ -375,7 +421,7 @@ const DisplayComponent = ({ events = [] }) => {
               >
                 戻る
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       )}
