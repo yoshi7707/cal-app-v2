@@ -147,7 +147,8 @@ const MyCalendar = () => {
       '根本美智子',
       '池田君枝',
       '吉田瑞季',
-      '中島謙一郎',
+      '外部講師',
+      'DVD対応',
       'その他',
     ],
     onkyos: [
@@ -828,7 +829,7 @@ const MyCalendar = () => {
 
       {/* <Calendar */}
       {isLoading ? (
-        <h2 class="text-blue-600">データを取得中です。少しお待ち下さい.....😀</h2>
+        <h2 class="text-blue-600">データ取得中、少し待ってネ...😀</h2>
       ) : (
         <DragAndDropCalendar
           localizer={localizer}
