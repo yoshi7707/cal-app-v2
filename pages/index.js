@@ -144,6 +144,8 @@ const MyCalendar = () => {
       '神えり',
       '黒田信子',
       '雨谷大',
+      '根本美智子',
+      '池田君枝',
       '吉田瑞季',
       '中島謙一郎',
       'その他',
@@ -160,6 +162,7 @@ const MyCalendar = () => {
       '大森美都里',
       '武藤啓子',
       '神えり',
+      '根本美智子',
       'その他',
       ''
     ],
@@ -825,7 +828,7 @@ const MyCalendar = () => {
 
       {/* <Calendar */}
       {isLoading ? (
-        <h1 class="text-blue-600">データを取得中です。少しお待ち下さい.....😀</h1>
+        <h2 class="text-blue-600">データを取得中です。少しお待ち下さい.....😀</h2>
       ) : (
         <DragAndDropCalendar
           localizer={localizer}
