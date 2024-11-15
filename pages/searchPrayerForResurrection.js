@@ -47,6 +47,7 @@ const DisplayComponent = ({ events = [] }) => {
       `日時: ${event.start.toLocaleString()}\n` +
       `導師: ${event.doushi}\n` +
       `音響: ${event.onkyo}\n` +
+      `${event.comment}\n` +
       '------------------------'
     )).join('\n');
 
@@ -168,6 +169,9 @@ const DisplayComponent = ({ events = [] }) => {
                     </p>
                     <p style={{ color: '#374151' }}>
                       音響: {event.onkyo}
+                    </p>
+                    <p style={{ color: '#374151' }}>
+                      {event.comment}
                     </p>
                   </div>
                 ))
