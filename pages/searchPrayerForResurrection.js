@@ -8,18 +8,27 @@ const DisplayComponent = ({ events = [] }) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const twoWeeksFromNow = new Date(today);
+    twoWeeksFromNow.setDate(today.getDate() + 14);
+    twoWeeksFromNow.setHours(23, 59, 59, 999);
+
     const processedEvents = events.map(event => ({
       ...event,
       start: event.start instanceof Date ? event.start : new Date(event.start),
       end: event.end instanceof Date ? event.end : new Date(event.end)
     }));
 
-    const filtered = processedEvents
-      .filter(event => {
-        const isValid = event.end >= today;
-        return isValid;
-      })
-      .sort((a, b) => a.start - b.start);
+    // Filter events
+    const filtered = events.filter(event =>
+      event.start >= today && event.start <= twoWeeksFromNow
+    );
+
+    // const filtered = processedEvents
+    //   .filter(event => {
+    //     const isValid = event.end >= today;
+    //     return isValid;
+    //   })
+    //   .sort((a, b) => a.start - b.start);
 
     setSortedEvents(filtered);
   }, [events]);
@@ -113,23 +122,23 @@ const DisplayComponent = ({ events = [] }) => {
               >
                 戻る
               </button>
-            {/* </div> */}
+              {/* </div> */}
 
-            <button
-              onClick={handleCopy}
-              style={{
-                padding: '5px 15px',
-                marginLeft: '1rem',
-                borderRadius: '5px',
-                backgroundColor: '#10B981',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
-              }}
-            >
-              コピー
-            </button>
+              <button
+                onClick={handleCopy}
+                style={{
+                  padding: '5px 15px',
+                  marginLeft: '1rem',
+                  borderRadius: '5px',
+                  backgroundColor: '#10B981',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                コピー
+              </button>
             </div>
 
             <div style={{ marginTop: '1.5rem' }}>
