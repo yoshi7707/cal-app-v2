@@ -23,12 +23,8 @@ const DisplayComponent = ({ events = [] }) => {
       event.start >= today && event.start <= twoWeeksFromNow
     );
 
-    // const filtered = processedEvents
-    //   .filter(event => {
-    //     const isValid = event.end >= today;
-    //     return isValid;
-    //   })
-    //   .sort((a, b) => a.start - b.start);
+    // Sort the filtered events by date and time
+    const sorted = filtered.sort((a, b) => a.start.getTime() - b.start.getTime());
 
     setSortedEvents(filtered);
   }, [events]);
