@@ -83,6 +83,7 @@ const MyCalendar = () => {
       '御法話拝聴会',
       '映画上映会',
       '伝道ー御法話拝聴会',
+      '新年大祭',
       '新復活祭',
       'ヘルメス大祭',
       '5月研修',
@@ -93,17 +94,20 @@ const MyCalendar = () => {
       '御生誕祭',
       'エル・カンターレ祭',
       '降魔成道記念式典',
-      '立宗記念式典',
+      '初級セミナー',
+      '中級セミナー',
+      '上級セミナー',
       '街宣',
       '外部講師セミナー',
       '埼玉本部行事',
       '集い',
       '地区会',
       'チーム会',
-      'ふれあい',
       '伝道ミーティング',
       '植福ミーティング',
+      'PDCAミーティング',
       'ネバーマインド',
+      'ふれあい',
       '支部長会議',
       'その他'
     ],
@@ -124,11 +128,11 @@ const MyCalendar = () => {
       '神えり',
       '黒田信子',
       '雨谷大',
-      '吉田瑞季',
-      '中島謙一郎',
       '根本美智子',
+      '池田君枝',
       '吉田瑞季',
-      '池田雅子',
+      '外部講師',
+      'DVD対応',
       'その他',
     ],
     onkyos: [
@@ -143,6 +147,7 @@ const MyCalendar = () => {
       '大森美都里',
       '武藤啓子',
       '神えり',
+      '根本美智子',
       'その他',
       ''
     ],
@@ -318,6 +323,11 @@ const MyCalendar = () => {
         setIsPopupVisible(false);
         setShowPopup(false);
 
+        // Reset state after successful creation
+        setTitle('');
+        setStart('');
+        setEnd('');
+
         setSelectedDates({ start: null, end: null });
         setSelectedEvent({
           title: "",
@@ -370,11 +380,34 @@ const MyCalendar = () => {
     // e.preventDefault();
 
     // Assuming you have default or initial values for start and end
-    const finalStart = isStartModified ? start : selectedEvent.start;
-    const finalEnd = isEndModified ? end : selectedEvent.end;
+    // const finalStart = isStartModified ? start : selectedEvent.start;
+    // const finalEnd = isEndModified ? end : selectedEvent.end;
+
+    // if (!selectedEvent || !selectedEvent.id) {
+    //   return;
+    // }
+
+    // Get the final start and end times
+    const finalStart = isStartModified ? new Date(start) : selectedEvent.start;
+    const finalEnd = isEndModified ? new Date(end) : selectedEvent.end;
 
     if (!selectedEvent || !selectedEvent.id) {
       return;
+    }
+
+    // Calculate time difference in milliseconds
+    const timeDiff = finalEnd - finalStart;
+    const fourHoursInMs = 4 * 60 * 60 * 1000;
+
+    // Check if duration is more than 4 hours
+    if (timeDiff > fourHoursInMs) {
+      const confirmResponse = confirm('終了時間が開始時間から4時間以上経過していますが、このまま続けますか？');
+
+      if (!confirmResponse) {
+        // If user clicks "Cancel", exit the function
+        return;
+      }
+      // If user clicks "OK", continue with the update
     }
 
     try {
@@ -408,6 +441,10 @@ const MyCalendar = () => {
         console.log('Event data updated successfully!');
         setIsPopupVisible(false);
         fetchEvents();
+
+        // Reset state after successful edit
+        // setStart('');
+        // setEnd('');
 
         setSelectedDates({ start: null, end: null });
         setSelectedEvent({
@@ -792,7 +829,7 @@ const MyCalendar = () => {
 
       {/* <Calendar */}
       {isLoading ? (
-        <h1 class="text-blue-600">データを取得中です。少しお待ち下さい.....😀</h1>
+        <h1 class="text-blue-600">データ取得中。少しお待ち下さい...😀</h1>
       ) : (
         <DragAndDropCalendar
           localizer={localizer}
@@ -903,10 +940,45 @@ const MyCalendar = () => {
                 }
               };
             }
+            if (event.title === "新年大祭") {
+              return {
+                style: {
+                  backgroundColor: 'orange', // This sets the text color to red
+                }
+              };
+            }
             if (event.title === "いま学びたい御法話セミナー") {
               return {
                 style: {
                   backgroundColor: 'navy', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "「未来創造ミーティング」") {
+              return {
+                style: {
+                  backgroundColor: 'gray', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "伝道ミーティング") {
+              return {
+                style: {
+                  backgroundColor: 'gray', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "植福ミーティング") {
+              return {
+                style: {
+                  backgroundColor: 'gray', // This sets the text color to red
+                }
+              };
+            }
+            if (event.title === "PDCAミーティング") {
+              return {
+                style: {
+                  backgroundColor: 'gray', // This sets the text color to red
                 }
               };
             }
