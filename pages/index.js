@@ -5,15 +5,8 @@ import moment from 'moment';
 import 'moment/locale/ja';
 moment.locale('ja');
 import * as dates from '../react-big-calendar/src/utils/dates'
-
-// import dateFns from 'date-fns';
-// import * as dateFns from 'date-fns';
-
 import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
-
-// Storybook cannot alias this, so you would use 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
-// import '../react-big-calendar/src/addons/dragAndDrop/styles.scss'
 
 import SearchComponent from './searchComponent';
 import SearchPrayerForResurrection from './searchPrayerForResurrection';
@@ -25,15 +18,7 @@ import parse from "date-fns/parse";
 import startOfWeek from "date-fns/startOfWeek";
 import getDay from "date-fns/getDay";
 
-// import { format, parseISO } from 'date-fns';
-
 import { setHours, setMinutes } from 'date-fns';
-
-// import enUS from 'date-fns/locale/en-US'
-
-// const localizer = dateFnsLocalizer(dateFns, {
-//   format: 'yyyy/MM/dd',
-// });
 
 const localizerFnc = dateFnsLocalizer({
   dateFns,
@@ -41,14 +26,7 @@ const localizerFnc = dateFnsLocalizer({
   parse,
   startOfWeek: (start) => new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0),
   getDay,
-  // locales,
 });
-
-// const localizerFnc = dateFnsLocalizer(dateFns, {
-//   startOfWeek: (start) => new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0),
-// });
-
-// import PropTypes from 'prop-types'
 
 import styles from '../styles/App.module.css';
 
@@ -104,6 +82,7 @@ const MyCalendar = () => {
       '御法話拝聴会',
       '映画上映会',
       '伝道ー御法話拝聴会',
+      '新年大祭',
       '新復活祭',
       'ヘルメス大祭',
       '5月研修',
@@ -260,7 +239,6 @@ const MyCalendar = () => {
       alert('End time must be after the start time.');
       return;
     }
-
     // 1 day in milliseconds
     const oneDay = 4 * 60 * 60 * 1000;
 
@@ -333,6 +311,11 @@ const MyCalendar = () => {
         setIsPopupVisible(false);
         setShowPopup(false);
 
+        // Reset state after successful creation
+        setTitle('');
+        setStart('');
+        setEnd('');
+
         setSelectedDates({ start: null, end: null });
         setSelectedEvent({
           title: "",
@@ -383,14 +366,36 @@ const MyCalendar = () => {
 
   const handleEditEvent = async () => {
     // e.preventDefault();
-
-    // Assuming you have default or initial values for start and end
-    const finalStart = isStartModified ? start : selectedEvent.start;
-    const finalEnd = isEndModified ? end : selectedEvent.end;
+    // Get the final start and end times
+    const finalStart = isStartModified ? new Date(start) : selectedEvent.start;
+    const finalEnd = isEndModified ? new Date(end) : selectedEvent.end;
 
     if (!selectedEvent || !selectedEvent.id) {
       return;
     }
+
+    // Calculate time difference in milliseconds
+    const timeDiff = finalEnd - finalStart;
+    const fourHoursInMs = 4 * 60 * 60 * 1000;
+
+    // Check if duration is more than 4 hours
+    if (timeDiff > fourHoursInMs) {
+      const confirmResponse = confirm('終了時間が開始時間から4時間以上経過していますが、このまま続けますか？');
+
+      if (!confirmResponse) {
+        // If user clicks "Cancel", exit the function
+        return;
+      }
+      // If user clicks "OK", continue with the update
+    }
+
+    // // Assuming you have default or initial values for start and end
+    // const finalStart = isStartModified ? start : selectedEvent.start;
+    // const finalEnd = isEndModified ? end : selectedEvent.end;
+
+    // if (!selectedEvent || !selectedEvent.id) {
+    //   return;
+    // }
 
     try {
       const eventData = {
@@ -423,6 +428,10 @@ const MyCalendar = () => {
         console.log('Event data updated successfully!');
         setIsPopupVisible(false);
         fetchEvents();
+
+        // Reset state after successful edit
+        // setStart('');
+        // setEnd('');
 
         setSelectedDates({ start: null, end: null });
         setSelectedEvent({
@@ -660,7 +669,12 @@ const MyCalendar = () => {
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
-      <SearchComponent events={events} data={data} onSearch={handleSearch} />
+      <button
+        style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
+        onClick={handleOpenPopup}>
+        新規行事入力
+      </button>
+      {/* <SearchComponent events={events} data={data} onSearch={handleSearch} /> */}
       <SearchPrayerForResurrection events={events} data={data} onSearch={handleSearch} />
       {/* <SearchComponent events={events} onSearch={handleSearch} /> */}
       <form onSubmit={handleSubmit}>
@@ -705,14 +719,6 @@ const MyCalendar = () => {
                 }}
                 required
               />
-              {/* <input
-                                type="datetime-local"
-                                value={selectedDates.start ? selectedDates.start.toISOString().slice(0, 16) : ''}
-                                style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                                // onChange={(e) => setStart(e.target.value)}
-                                onChange={(e) => setStart(e.target.value)}
-                                required
-                            /> */}
               <br /> {/* 改行を挿入 */}
               <label>終了時間：{selectedDates.end ? selectedDates.end.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}</label>
               <input
@@ -881,10 +887,6 @@ const MyCalendar = () => {
               uketsuke: "",
               comment: "",
             });
-            // setSelectedDates({ start, end });
-            // Handle the selection of an empty slot here
-            // You can open a popup or modal with the start and end dates pre-filled in input boxes
-            // You can use the start and end dates to pre-fill the input boxes in your popup
             console.log('Selected slot:', start, end);
           }}
           eventPropGetter={(event) => {
@@ -944,6 +946,13 @@ const MyCalendar = () => {
                 }
               };
             }
+            if (event.title === "新年大祭") {
+              return {
+                style: {
+                  backgroundColor: 'orange', // This sets the text color to red
+                }
+              };
+            }
             if (event.title === "いま学びたい御法話セミナー") {
               return {
                 style: {
@@ -972,8 +981,16 @@ const MyCalendar = () => {
                 }
               };
             }
+            if (event.title === "PDCAミーティング") {
+              return {
+                style: {
+                  backgroundColor: 'gray', // This sets the text color to red
+                }
+              };
+            }
             return {}; // Return empty for events that don't match
-          }}
+          }
+          }
           showMultiDayTimes
           popup={true}
           selectable
@@ -1048,20 +1065,6 @@ const MyCalendar = () => {
             />
             <br />
             <label>導師：</label>
-            {/* <input
-  list="doushis"
-  style={{ width: '50%', height: '30px', marginTop: '5px', marginLeft: '10px' }}
-  value={selectedEvent.doushi || ''}
-  onChange={(e) => handleEventChange('doushi', e.target.value)}
-  required
-/>
-<datalist id="doushis">
-  {data.doushis.map((doushi, index) => (
-    <option key={index} value={doushi}>
-      {doushi}
-    </option>
-  ))}
-</datalist> */}
             <label>導師：{selectedEvent.doushi || ''}</label>
             <select
               style={{
@@ -1151,11 +1154,6 @@ const MyCalendar = () => {
               placeholder="備考"
             />
             <br />
-            {/* <button
-                            style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                            onClick={handleSubmit}>
-                            行事の追加
-                        </button> */}
             <button
               style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
               onClick={handleEditEvent}>
@@ -1174,14 +1172,7 @@ const MyCalendar = () => {
             </button>
           </div>
         </div>
-
-
       )}
-      {/* <button
-        style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
-        onClick={handleOpenPopup}>
-        新規行事入力
-      </button> */}
     </div>
   );
 };
