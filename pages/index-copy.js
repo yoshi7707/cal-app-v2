@@ -377,38 +377,35 @@ const MyCalendar = () => {
   };
 
   const handleEditEvent = async () => {
-    // e.preventDefault();
-
-    // Assuming you have default or initial values for start and end
-    // const finalStart = isStartModified ? start : selectedEvent.start;
-    // const finalEnd = isEndModified ? end : selectedEvent.end;
-
-    // if (!selectedEvent || !selectedEvent.id) {
-    //   return;
-    // }
-
-    // Get the final start and end times
-    const finalStart = isStartModified ? new Date(start) : selectedEvent.start;
-    const finalEnd = isEndModified ? new Date(end) : selectedEvent.end;
-
-    if (!selectedEvent || !selectedEvent.id) {
-      return;
-    }
-
-    // Calculate time difference in milliseconds
-    const timeDiff = finalEnd - finalStart;
-    const fourHoursInMs = 4 * 60 * 60 * 1000;
-
-    // Check if duration is more than 4 hours
-    if (timeDiff > fourHoursInMs) {
-      const confirmResponse = confirm('終了時間が開始時間から4時間以上経過していますが、このまま続けますか？');
-
-      if (!confirmResponse) {
-        // If user clicks "Cancel", exit the function
-        return;
-      }
-      // If user clicks "OK", continue with the update
-    }
+  
+        // Get the final start and end times
+        const finalStart = isStartModified ? new Date(start) : selectedEvent.start;
+        const finalEnd = isEndModified ? new Date(end) : selectedEvent.end;
+    
+        if (!selectedEvent || !selectedEvent.id) {
+            return;
+        }
+    
+        // Check if the end time is before the start time
+        if (finalEnd <= finalStart) {
+            alert("終了時間を入力してください。");
+            return; // Exit the function
+        }
+    
+        // Calculate time difference in milliseconds
+        const timeDiff = finalEnd - finalStart;
+        const fourHoursInMs = 4 * 60 * 60 * 1000;
+    
+        // Check if duration is more than 4 hours
+        if (timeDiff > fourHoursInMs) {
+            const confirmResponse = confirm('終了時間が開始時間から4時間以上経過していますが、このまま続けますか？');
+    
+            if (!confirmResponse) {
+                // If user clicks "Cancel", exit the function
+                return;
+            }
+            // If user clicks "OK", continue with the update
+        }
 
     try {
       const eventData = {
