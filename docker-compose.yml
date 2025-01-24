@@ -1,0 +1,98 @@
+services:
+  app:
+    build: 
+      context: .
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=mongodb://mongodb:27017/mydatabase
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:
+
+# services:
+#   app:
+#     build: 
+#       context: .
+#       dockerfile: Dockerfile
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - DATABASE_URL=mongodb://mongodb:27017/mydatabase
+#       - NODE_ENV=production
+#     depends_on:
+#       - mongodb
+
+#   mongodb:
+#     image: mongo:latest
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongodb_data:/data/db
+
+# volumes:
+#   mongodb_data:
+
+
+# version: "3.8"
+
+# services:
+#   cal-app:
+#     image: yoshi7707/cal-app:latest
+#     container_name: cal-app
+#     ports:
+#       - "3000:3000" # Adjust the ports as needed
+#     environment:
+#       - MONGO_URI=mongodb://mongo:27017/cal-app-db # Connection to MongoDB
+#     depends_on:
+#       - mongo
+
+#   mongo:
+#     image: mongo:latest
+#     container_name: mongo
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongo-data:/data/db
+
+# volumes:
+#   mongo-data:
+
+
+# version: "3.9"
+
+# services:
+#   app:
+#     build:
+#       context: .
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - MONGODB_URI=mongodb://mongo:27017/my-database
+#     depends_on:
+#       - mongo
+
+#   mongo:
+#     image: mongo:latest
+#     container_name: mongodb
+#     ports:
+#       - "27017:27017"
+#     volumes:
+#       - mongo_data:/data/db
+
+# volumes:
+#   mongo_data:
