@@ -114,8 +114,8 @@ const MyCalendar = () => {
       'その他'
     ],
     doushis: [
-      '田口義明',
-      '馬場重善',
+      '支部長',
+      '職員',
       '豊田利雄',
       '北村かおり',
       '豊田奈奈美',
@@ -215,26 +215,158 @@ const MyCalendar = () => {
     // console.log("Event->", events); // Move the console.log here
   }, []);
 
-  const fetchEvents = async () => {
-    try {
-      const response = await fetch('/api/event');
-      const eventData = await response.json();
 
-      setEvents(eventData.map(event => ({
-        id: event.id,
-        title: event.eventName,
-        start: new Date(event.startTime),
-        end: new Date(event.endTime),
-        doushi: event.doushi,
-        onkyo: event.onkyo,
-        shikai: event.shikai,
-        uketsuke: event.uketsuke,
-        comment: event.comment
-      })));
-    } catch (error) {
-      console.error('Error fetching events:', error);
+// Add this after your existing useEffect
+// useEffect(() => {
+//   syncWithGoogleCalendar();
+// }, []); // This will run once when component mounts
+
+
+  // Add this after your existing useEffect and before the fetchEvents function
+// const syncWithGoogleCalendar = async () => {
+//   try {
+//     const response = await fetch('/api/google-calendar/sync');
+//     const data = await response.json();
+    
+//     if (data.events) {
+//       // Merge Google Calendar events with your local events
+//       const googleEvents = data.events.map(event => ({
+//         id: event.id,
+//         title: event.title,
+//         start: new Date(event.start),
+//         end: new Date(event.end),
+//         description: event.description,
+//         location: event.location,
+//         source: 'google',
+//         // Add your custom fields with default values
+//         doushi: '',
+//         onkyo: '',
+//         shikai: '',
+//         uketsuke: '',
+//         comment: event.description || ''
+//       }));
+      
+//       // Update your calendar state
+//       setEvents(prevEvents => {
+//         const localEvents = prevEvents.filter(e => e.source !== 'google');
+//         return [...localEvents, ...googleEvents];
+//       });
+//     }
+//   } catch (error) {
+//     console.error('Error syncing with Google Calendar:', error);
+//   }
+// };
+
+// ==================================================
+
+
+const syncToGoogleCalendar = async () => {
+  try {
+    console.log('Starting sync TO Google Calendar...');
+    
+    const response = await fetch('/api/google-calendar/sync-to-google', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+    
+    const data = await response.json();
+    console.log('Sync TO Google response:', data);
+    
+    if (data.success) {
+      alert(`Successfully synced ${data.results.created} events to Google Calendar!`);
+    } else {
+      alert('Error syncing to Google Calendar: ' + data.error);
+    }
+  } catch (error) {
+    console.error('Error syncing TO Google Calendar:', error);
+    alert('Error syncing to Google Calendar: ' + error.message);
+  }
+};
+
+// ==================================================
+
+const fetchEvents = async () => {
+  try {
+    const eventResponse = await fetch("/api/event", { cache: "no-store" });
+    const eventData = await eventResponse.json();
+
+    // Get local events
+    const localEvents = eventData.map(event => ({
+      id: event.id,
+      title: event.eventName,
+      start: new Date(event.startTime),
+      end: new Date(event.endTime),
+      doushi: event.doushi,
+      onkyo: event.onkyo,
+      shikai: event.shikai,
+      uketsuke: event.uketsuke,
+      comment: event.comment,
+      source: 'local'
+    }));
+
+    // Also fetch Google Calendar events
+    try {
+      const googleResponse = await fetch('/api/google-calendar/sync');
+      const googleData = await googleResponse.json();
+      
+      if (googleData.events) {
+        const googleEvents = googleData.events.map(event => ({
+          id: event.id,
+          title: event.title,
+          start: new Date(event.start),
+          end: new Date(event.end),
+          description: event.description,
+          location: event.location,
+          source: 'google',
+          doushi: '',
+          onkyo: '',
+          shikai: '',
+          uketsuke: '',
+          comment: event.description || ''
+        }));
+        
+        setEvents([...localEvents, ...googleEvents]);
+      } else {
+        setEvents(localEvents);
+      }
+    } catch (googleError) {
+      console.error('Error fetching Google Calendar events:', googleError);
+      setEvents(localEvents);
+    }
+
+    setIsLoading(false);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    setIsLoading(false);
+  }
+};
+
+  // const fetchEvents = async () => {
+  //   try {
+  //     const response = await fetch('/api/event');
+  //     const eventData = await response.json();
+
+  //     setEvents(eventData.map(event => ({
+  //       id: event.id,
+  //       title: event.eventName,
+  //       start: new Date(event.startTime),
+  //       end: new Date(event.endTime),
+  //       doushi: event.doushi,
+  //       onkyo: event.onkyo,
+  //       shikai: event.shikai,
+  //       uketsuke: event.uketsuke,
+  //       comment: event.comment
+  //     })));
+  //   } catch (error) {
+  //     console.error('Error fetching events:', error);
+  //   }
+  // };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -309,8 +441,21 @@ const MyCalendar = () => {
       });
 
       if (response.ok) {
+        const result = await response.json();
         // Handle success response
         console.log('Event data submitted successfully!');
+        
+        // Show Google Calendar sync status
+        if (result.googleCalendarSync) {
+          if (result.googleCalendarSync.success) {
+            alert(`行事が正常に追加されました！\nGoogle Calendar同期: ${result.googleCalendarSync.message}`);
+          } else {
+            alert(`行事が追加されましたが、Google Calendar同期に失敗しました。\nエラー: ${result.googleCalendarSync.message}`);
+          }
+        } else {
+          alert('行事が正常に追加されました！');
+        }
+        
         fetchEvents();
         setIsPopupVisible(false);
         setShowPopup(false);
@@ -333,6 +478,7 @@ const MyCalendar = () => {
       } else {
         // Handle error response
         console.error('Failed to submit event data');
+        alert('行事の追加に失敗しました。');
       }
     } catch (error) {
       console.error('Error submitting event data:', error);
@@ -425,8 +571,21 @@ const MyCalendar = () => {
       });
 
       if (response.ok) {
+        const result = await response.json();
         // Handle success response
         console.log('Event data updated successfully!');
+        
+        // Show Google Calendar sync status
+        if (result.googleCalendarSync) {
+          if (result.googleCalendarSync.success) {
+            alert(`行事が正常に更新されました！\nGoogle Calendar同期: ${result.googleCalendarSync.message}`);
+          } else {
+            alert(`行事が更新されましたが、Google Calendar同期に失敗しました。\nエラー: ${result.googleCalendarSync.message}`);
+          }
+        } else {
+          alert('行事が正常に更新されました！');
+        }
+        
         setIsPopupVisible(false);
         fetchEvents();
 
@@ -446,6 +605,7 @@ const MyCalendar = () => {
       } else {
         // Handle error response
         console.error('Failed to update event data');
+        alert('行事の更新に失敗しました。');
       }
     } catch (error) {
       console.error('Error updating event data:', error);
@@ -463,8 +623,21 @@ const MyCalendar = () => {
       });
 
       if (response.ok) {
+        const result = await response.json();
         // Handle success response
         console.log('Event deleted successfully!');
+        
+        // Show Google Calendar sync status
+        if (result.googleCalendarSync) {
+          if (result.googleCalendarSync.success) {
+            alert(`行事が正常に削除されました！\nGoogle Calendar同期: ${result.googleCalendarSync.message}`);
+          } else {
+            alert(`行事が削除されましたが、Google Calendar同期に失敗しました。\nエラー: ${result.googleCalendarSync.message}`);
+          }
+        } else {
+          alert('行事が正常に削除されました！');
+        }
+        
         // Filter out the deleted event from the events array
         const updatedEvents = events.filter(event => event.id !== selectedEvent.id);
         // Update the events state with the filtered events
@@ -475,6 +648,7 @@ const MyCalendar = () => {
       } else {
         // Handle error response
         console.error('Failed to delete event');
+        alert('行事の削除に失敗しました。');
       }
     } catch (error) {
       console.error('Error deleting event:', error);
@@ -670,6 +844,43 @@ const MyCalendar = () => {
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
+
+      {/* Add this button near your other buttons (like the "Add Event" button) */}
+      <br />
+
+{/* <button 
+  onClick={syncWithGoogleCalendar}
+  style={{
+    backgroundColor: '#4285f4',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    margin: '5px'
+  }}
+>
+  Sync with Google Calendar
+</button> */}
+
+{/* <button 
+  onClick={syncToGoogleCalendar}
+  style={{
+    backgroundColor: '#34a853',
+    color: 'white',
+    border: 'none',
+    padding: '10px 20px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    margin: '5px'
+  }}
+>
+  Sync TO Google Calendar
+</button> */}
+
+<br />
+
+
       <button
         style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
         onClick={handleOpenPopup}>
