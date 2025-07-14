@@ -1,0 +1,65 @@
+{
+  "name": "cal-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.0",
+    "@mui/lab": "^5.0.0-alpha.169",
+    "@mui/material": "^5.15.14",
+    "@prisma/client": "^5.10.2",
+    "@react-oauth/google": "^0.12.1",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "date-fns": "^3.6.0",
+    "eslint": "v8.57.0",
+    "googleapis": "^152.0.0",
+    "moment": "^2.30.1",
+    "mongodb": "^6.3.0",
+    "next": "^14.1.0",
+    "rc-time-picker": "^3.7.3",
+    "react": "^18.2.0",
+    "react-big-calendar": "^1.11.2",
+    "react-datepicker": "^6.1.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "^5.0.1",
+    "react-time-picker": "^6.6.0",
+    "sass": "^1.75.0",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "next start",
+    "build": "prisma generate && next build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "dev": "NODE_ENV=development node_modules/.bin/next dev"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.6.0",
+    "@typescript-eslint/parser": "^7.6.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.2",
+    "eslint-plugin-react": "^7.34.1",
+    "prisma": "^5.10.2"
+  }
+}
