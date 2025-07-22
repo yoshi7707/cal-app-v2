@@ -845,7 +845,6 @@ const fetchEvents = async () => {
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
-      <br />
 
 {/* <button 
   onClick={syncWithGoogleCalendar}
@@ -878,8 +877,6 @@ const fetchEvents = async () => {
 </button> */}
 
 <br />
-
-
       <button
         style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
         onClick={handleOpenPopup}>
