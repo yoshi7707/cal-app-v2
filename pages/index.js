@@ -845,8 +845,6 @@ const fetchEvents = async () => {
   return (
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
-
-      {/* Add this button near your other buttons (like the "Add Event" button) */}
       <br />
 
 {/* <button 
