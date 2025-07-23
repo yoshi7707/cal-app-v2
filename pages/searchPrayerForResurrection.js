@@ -8,25 +8,21 @@ const DisplayComponent = ({ events = [] }) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const twoWeeksFromNow = new Date(today);
-    twoWeeksFromNow.setDate(today.getDate() + 14);
-    twoWeeksFromNow.setHours(23, 59, 59, 999);
+    // Set the end date to 31 days from today (one month)
+    const oneMonthFromNow = new Date(today);
+    oneMonthFromNow.setDate(today.getDate() + 31);
+    oneMonthFromNow.setHours(23, 59, 59, 999);
 
-    const processedEvents = events.map(event => ({
-      ...event,
-      start: event.start instanceof Date ? event.start : new Date(event.start),
-      end: event.end instanceof Date ? event.end : new Date(event.end)
-    }));
-
-    // Filter events
-    const filtered = events.filter(event =>
-      event.start >= today && event.start <= twoWeeksFromNow
-    );
+    // Filter events for the next 31 days
+    const filtered = events.filter(event => {
+      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+      return eventStart >= today && eventStart <= oneMonthFromNow;
+    });
 
     // Sort the filtered events by date and time
     const sorted = filtered.sort((a, b) => a.start.getTime() - b.start.getTime());
 
-    setSortedEvents(filtered);
+    setSortedEvents(sorted);
   }, [events]);
 
   const handleDisplay = () => {
@@ -158,7 +154,7 @@ const DisplayComponent = ({ events = [] }) => {
                       {event.title}
                     </h4>
                     <p style={{ color: '#4b5563', marginBottom: '0.5rem' }}>
-                      {event.start.toLocaleString()}
+                      {event.start.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
                     </p>
                     <p style={{ color: '#374151', marginBottom: '0.25rem' }}>
                       導師: {event.doushi}
