@@ -1,0 +1,11 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/send-line-reminders",
+      "schedule": "0 15 * * *"
+    }
+  ]
+}
+
+
+
