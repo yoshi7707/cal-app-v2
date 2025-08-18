@@ -121,7 +121,8 @@ export default async function handler(req, res) {
       for (const personName in rolesByPerson) {
         if (lineUserIdMap[personName]) {
           const rolesText = rolesByPerson[personName].join('、')
-          const message = `【リマインダー】明日「${title}」の${rolesText}担当です。`
+          const eventTime = new Date(e.startTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' });
+          const message = `【リマインダー】明日${eventTime}～「${title}」の${rolesText}担当です。`
           if (dryRun) {
             pushCount += 1
           } else {
