@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, momentLocalizer, Views, DateLocalizer } from 'react-big-calendar';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
@@ -50,797 +50,321 @@ const MyCalendar = () => {
   const [title, setTitle] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
-
   const [isLoading, setIsLoading] = useState(true);
+  // lists loaded from DB for selection
+  const [doushis, setDoushis] = useState([]);
+  const [onkyos, setOnkyos] = useState([]);
+  const [shikais, setShikais] = useState([]);
+  const [presetEvents, setPresetEvents] = useState([]);
 
+  // settings UI state
+  const [showSettings, setShowSettings] = useState(false);
+  const [newItemType, setNewItemType] = useState('doushi');
+  const [newItemName, setNewItemName] = useState('');
+  const [isSavingItem, setIsSavingItem] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
+
+  // popup / selection state (added to fix missing handlers)
+  const [showPopup, setShowPopup] = useState(false);
+  const [isPopupVisible, setIsPopupVisible] = useState(false);
+  const [selectedDates, setSelectedDates] = useState({ start: null, end: null });
+  const [selectedEvent, setSelectedEvent] = useState({
+    title: '',
+    doushi: '',
+    onkyo: '',
+    shikai: '',
+    uketsuke: '',
+    comment: '',
+    start: null,
+    end: null,
+  });
   const [isStartModified, setIsStartModified] = useState(false);
   const [isEndModified, setIsEndModified] = useState(false);
 
-  const [selectedDates, setSelectedDates] = useState({ start: null, end: null });
-
-  const [newEvent, setNewEvent] = useState({
-    doushi: "",
-    onkyo: "",
-    shikai: "",
-    uketsuke: "",
-    comment: ""
-  });
-
-  const data = {
-    gyouji: [
-      '「復活の祈り」',
-      '七の日感謝祭',
-      '発展・繁栄系祈願祭',
-      '降魔・病気平癒系祈願祭',
-      '新祈願祭',
-      '月例法座「心の指針」',
-      '「未来創造ミーティング」',
-      '「心の修行」',
-      '百歳会',
-      'いま学びたい御法話セミナー',
-      'エンゼルプラン',
-      'サクセスNo.1',
-      '親子',
-      '御法話拝聴会',
-      '経典セミナー',
-      '映画上映会',
-      '伝道ー御法話拝聴会',
-      '新年大祭',
-      '新復活祭',
-      'ヘルメス大祭',
-      '5月研修',
-      '家庭ユートピア祈願大祭',
-      '幸福供養祭',
-      '大悟祭',
-      '初転法輪記念祭',
-      '御生誕祭',
-      'エル・カンターレ祭',
-      '降魔成道記念式典',
-      '初級セミナー',
-      '中級セミナー',
-      '上級セミナー',
-      '街宣',
-      '外部講師セミナー',
-      '総合本部行事',
-      '埼玉本部行事',
-      '集い',
-      '地区会',
-      'チーム会',
-      '伝道ミーティング',
-      '植福ミーティング',
-      'PDCAミーティング',
-      'ネバーマインド',
-      'ふれあい',
-      '支部長会議',
-      'その他'
-    ],
-    doushis: [
-      '支部長',
-      '職員',
-      '豊田利雄',
-      '北村かおり',
-      '豊田奈奈美',
-      '渡辺和重',
-      '飯田剛',
-      '渡辺聖子',
-      '野口佐知子',
-      '鮫島三重子',
-      '土谷恵',
-      '中島真美',
-      '相良屋昌夫',
-      '神えり',
-      '黒田信子',
-      '雨谷大',
-      '根本美智子',
-      '池田君枝',
-      '山崎裕加',
-      '吉田瑞季',
-      '外部講師',
-      'DVD対応',
-      'その他',
-    ],
-    onkyos: [
-      '相良屋昌夫',
-      '油井房雄',
-      '豊田奈奈美',
-      '北村かおり',
-      '渡辺聖子',
-      '野口佐知子',
-      '土谷恵',
-      '中島真美',
-      '大森美都里',
-      '武藤啓子',
-      '神えり',
-      '根本美智子',
-      'その他',
-      ''
-    ],
-    shikais: [
-      '豊田奈奈美',
-      '北村かおり',
-      '渡辺聖子',
-      '野口佐知子',
-      '土谷恵',
-      '中島真美',
-      'その他',
-      ''
-    ],
-    uketsukes: [
-      '豊田奈奈美',
-      '北村かおり',
-      '渡辺聖子',
-      '野口佐知子',
-      '土谷恵',
-      '中島真美',
-      '鮫島三重子',
-      'その他',
-      ''
-    ],
-  };
-
-  //drug & copy proccess ==================================================
-
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isPopupVisible, setIsPopupVisible] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const scrollToTime = new Date();
+  const resizeEvent = () => {};
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const eventResponse = await fetch("/api/event", { cache: "no-store" });
-        console.log('eventResponse', eventResponse);
-        const eventData = await eventResponse.json();
+    // load settings lists on mount
+    const loadSettings = fetch('/api/settings')
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.items) {
+          setDoushis(data.items.doushi || []);
+          setOnkyos(data.items.onkyo || []);
+          setShikais(data.items.shikai || []);
+          setPresetEvents(data.items.event || []);
+        }
+      });
 
-        setIsLoading(false)
-        // setAllEvents(eventData);
-        // setEvents(eventData)
-        setEvents(eventData.map(event => ({
-          id: event.id,
-          title: event.eventName,
-          start: new Date(event.startTime),
-          end: new Date(event.endTime),
-          doushi: event.doushi,
-          onkyo: event.onkyo,
-          shikai: event.shikai,
-          uketsuke: event.uketsuke,
-          comment: event.comment
-        })));
+    // load existing events from DB
+    const loadEvents = fetch('/api/event')
+      .then(r => r.json())
+      .then(list => {
+        if (Array.isArray(list)) {
+          const mapped = list.map(ev => ({
+            id: ev.id, // Preserve the ID for deletion
+            title: ev.eventName,
+            start: ev.startTime ? new Date(ev.startTime) : (ev.date ? new Date(ev.date) : new Date()),
+            end: ev.endTime ? new Date(ev.endTime) : new Date(),
+            doushi: ev.doushi || '',
+            onkyo: ev.onkyo || '',
+            shikai: ev.shikai || '',
+            uketsuke: ev.uketsuke || '',
+            comment: ev.comment || ''
+          }));
+          setEvents(mapped);
+        }
+      });
 
-        console.log("Event->", events);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        setIsLoading(false)
-      }
-    }
-    fetchData();
-    // console.log("Event->", events); // Move the console.log here
+    Promise.allSettled([loadSettings, loadEvents])
+      .catch(err => console.error(err))
+      .finally(() => setIsLoading(false));
   }, []);
 
-
-// Add this after your existing useEffect
-// useEffect(() => {
-//   syncWithGoogleCalendar();
-// }, []); // This will run once when component mounts
-
-
-  // Add this after your existing useEffect and before the fetchEvents function
-// const syncWithGoogleCalendar = async () => {
-//   try {
-//     const response = await fetch('/api/google-calendar/sync');
-//     const data = await response.json();
-    
-//     if (data.events) {
-//       // Merge Google Calendar events with your local events
-//       const googleEvents = data.events.map(event => ({
-//         id: event.id,
-//         title: event.title,
-//         start: new Date(event.start),
-//         end: new Date(event.end),
-//         description: event.description,
-//         location: event.location,
-//         source: 'google',
-//         // Add your custom fields with default values
-//         doushi: '',
-//         onkyo: '',
-//         shikai: '',
-//         uketsuke: '',
-//         comment: event.description || ''
-//       }));
-      
-//       // Update your calendar state
-//       setEvents(prevEvents => {
-//         const localEvents = prevEvents.filter(e => e.source !== 'google');
-//         return [...localEvents, ...googleEvents];
-//       });
-//     }
-//   } catch (error) {
-//     console.error('Error syncing with Google Calendar:', error);
-//   }
-// };
-
-// ==================================================
-
-
-const syncToGoogleCalendar = async () => {
-  try {
-    console.log('Starting sync TO Google Calendar...');
-    
-    const response = await fetch('/api/google-calendar/sync-to-google', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+  // Add keyboard event handler for closing settings modal
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && showSettings) {
+        setShowSettings(false);
+        setStatusMsg('');
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showSettings]);
+
+  async function refreshSettings() {
+    const r = await fetch('/api/settings');
+    const data = await r.json();
+    if (data && data.items) {
+      setDoushis(data.items.doushi || []);
+      setOnkyos(data.items.onkyo || []);
+      setShikais(data.items.shikai || []);
+      setPresetEvents(data.items.event || []);
     }
-    
-    const data = await response.json();
-    console.log('Sync TO Google response:', data);
-    
-    if (data.success) {
-      alert(`Successfully synced ${data.results.created} events to Google Calendar!`);
-    } else {
-      alert('Error syncing to Google Calendar: ' + data.error);
-    }
-  } catch (error) {
-    console.error('Error syncing TO Google Calendar:', error);
-    alert('Error syncing to Google Calendar: ' + error.message);
   }
-};
 
-// ==================================================
-
-const fetchEvents = async () => {
-  try {
-    const eventResponse = await fetch("/api/event", { cache: "no-store" });
-    const eventData = await eventResponse.json();
-
-    // Get local events
-    const localEvents = eventData.map(event => ({
-      id: event.id,
-      title: event.eventName,
-      start: new Date(event.startTime),
-      end: new Date(event.endTime),
-      doushi: event.doushi,
-      onkyo: event.onkyo,
-      shikai: event.shikai,
-      uketsuke: event.uketsuke,
-      comment: event.comment,
-      source: 'local'
-    }));
-
-    // Also fetch Google Calendar events
+  async function handleAddSetting(e) {
+    e.preventDefault();
+    if (!newItemName.trim()) return setStatusMsg('Name required');
+    setIsSavingItem(true);
+    setStatusMsg('');
     try {
-      const googleResponse = await fetch('/api/google-calendar/sync');
-      const googleData = await googleResponse.json();
-      
-      if (googleData.events) {
-        const googleEvents = googleData.events.map(event => ({
-          id: event.id,
-          title: event.title,
-          start: new Date(event.start),
-          end: new Date(event.end),
-          description: event.description,
-          location: event.location,
-          source: 'google',
-          doushi: '',
-          onkyo: '',
-          shikai: '',
-          uketsuke: '',
-          comment: event.description || ''
-        }));
-        
-        setEvents([...localEvents, ...googleEvents]);
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: newItemType, name: newItemName.trim() })
+      });
+      const json = await res.json();
+      if (json.ok) {
+        setStatusMsg('Saved');
+        setNewItemName('');
+        await refreshSettings();
       } else {
-        setEvents(localEvents);
+        setStatusMsg(json.error || json.message || 'Failed');
       }
-    } catch (googleError) {
-      console.error('Error fetching Google Calendar events:', googleError);
-      setEvents(localEvents);
+    } catch (err) {
+      console.error(err);
+      setStatusMsg('Error');
+    } finally {
+      setIsSavingItem(false);
     }
-
-    setIsLoading(false);
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    setIsLoading(false);
   }
-};
 
-  // const fetchEvents = async () => {
-  //   try {
-  //     const response = await fetch('/api/event');
-  //     const eventData = await response.json();
+  function handleOpenPopup() {
+    const now = new Date();
+    setShowPopup(true);
+    setSelectedDates({ start: now, end: new Date(now.getTime() + 60 * 60 * 1000) });
+    setSelectedEvent({
+      title: '',
+      doushi: '',
+      onkyo: '',
+      shikai: '',
+      uketsuke: '',
+      comment: '',
+      start: now,
+      end: new Date(now.getTime() + 60 * 60 * 1000),
+    });
+  }
 
-  //     setEvents(eventData.map(event => ({
-  //       id: event.id,
-  //       title: event.eventName,
-  //       start: new Date(event.startTime),
-  //       end: new Date(event.endTime),
-  //       doushi: event.doushi,
-  //       onkyo: event.onkyo,
-  //       shikai: event.shikai,
-  //       uketsuke: event.uketsuke,
-  //       comment: event.comment
-  //     })));
-  //   } catch (error) {
-  //     console.error('Error fetching events:', error);
-  //   }
-  // };
+  function handleClosePopup() {
+    setShowPopup(false);
+  }
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    // Check if end date is after start date
-    if (selectedDates.end <= selectedDates.start) {
-      alert('End time must be after the start time.');
-      return;
-    }
-    // 1 day in milliseconds
-    const oneDay = 4 * 60 * 60 * 1000;
+  function handleEventChange(field, e) {
+    const value = e && e.target ? e.target.value : e;
+    setSelectedEvent(prev => ({ ...prev, [field]: value }));
+  }
 
-    if (selectedDates.end - selectedDates.start >= oneDay) {
-      const confirmResponse = confirm('End time must be more than 4hrs after the start time. Do you want to proceed?');
-
-      if (!confirmResponse) {
-        // If user clicks "Cancel", exit the function
-        return;
-      }
-
-      // If user clicks "OK", continue with the function
-    }
-
-    const adjustedStart = new Date(selectedDates.start.getTime());
-    const adjustedEnd = new Date(selectedDates.end.getTime());
-
-    // Adjust the time to be in JST
-    adjustedStart.setHours(adjustedStart.getHours() - 9);
-    adjustedEnd.setHours(adjustedEnd.getHours() - 9);
-
-    setEvents([...events, {
+  async function handleSubmit(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const startDate = selectedDates.start || selectedEvent.start || new Date();
+    const endDate = selectedDates.end || selectedEvent.end || new Date(Date.now() + 3600000);
+    const newEv = {
       title: selectedEvent.title,
-      // id: newEvent.id,
-      doushi: selectedEvent.doushi, // Include doushi from newEvent object
+      start: startDate,
+      end: endDate,
+      doushi: selectedEvent.doushi,
       onkyo: selectedEvent.onkyo,
       shikai: selectedEvent.shikai,
       uketsuke: selectedEvent.uketsuke,
       comment: selectedEvent.comment,
-      start: adjustedStart,
-      end: adjustedEnd,
-    }]);
-    setTitle('');
-    setSelectedEvent({
-      title: "",
-      doushi: "",
-      onkyo: "",
-      shikai: "",
-      uketsuke: "",
-      comment: ""
-    });
-    setStart('');
-    setEnd('');
-
-    const eventData = {
-      eventName: selectedEvent.title ? selectedEvent.title : "",
-      date: "",
-      startTime: adjustedStart.toISOString(),
-      endTime: adjustedEnd.toISOString(),
-      id: newEvent.id ? newEvent.id : "",
-      doushi: selectedEvent.doushi ? selectedEvent.doushi : "",
-      onkyo: selectedEvent.onkyo ? selectedEvent.onkyo : "",
-      shikai: selectedEvent.shikai ? selectedEvent.shikai : "",
-      uketsuke: selectedEvent.uketsuke ? selectedEvent.uketsuke : "",
-      comment: selectedEvent.comment ? selectedEvent.comment : ""
     };
+
+    // Persist to backend
     try {
       const response = await fetch('/api/event', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(eventData),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventName: newEv.title,
+          date: startDate.toISOString(),
+          startTime: startDate.toISOString(),
+          endTime: endDate.toISOString(),
+          doushi: newEv.doushi || '',
+          onkyo: newEv.onkyo || '',
+          shikai: newEv.shikai || '',
+          uketsuke: newEv.uketsuke || '',
+          comment: newEv.comment || ''
+        })
       });
 
       if (response.ok) {
-        const result = await response.json();
-        // Handle success response
-        console.log('Event data submitted successfully!');
-        
-        // Show Google Calendar sync status
-        if (result.googleCalendarSync) {
-          if (result.googleCalendarSync.success) {
-            alert(`行事が正常に追加されました！\nGoogle Calendar同期: ${result.googleCalendarSync.message}`);
-          } else {
-            alert(`行事が追加されましたが、Google Calendar同期に失敗しました。\nエラー: ${result.googleCalendarSync.message}`);
-          }
-        } else {
-          alert('行事が正常に追加されました！');
-        }
-        
-        fetchEvents();
-        setIsPopupVisible(false);
-        setShowPopup(false);
-
-        // Reset state after successful creation
-        setTitle('');
-        setStart('');
-        setEnd('');
-
-        setSelectedDates({ start: null, end: null });
-        setSelectedEvent({
-          title: "",
-          doushi: "",
-          onkyo: "",
-          shikai: "",
-          uketsuke: "",
-          comment: ""
-        });
-        // window.location.reload();
+        const createdEvent = await response.json();
+        // Add the created event with ID to local state
+        const eventWithId = {
+          ...newEv,
+          id: createdEvent.id
+        };
+        setEvents(prev => [...prev, eventWithId]);
+        console.log('Event created successfully');
       } else {
-        // Handle error response
-        console.error('Failed to submit event data');
-        alert('行事の追加に失敗しました。');
+        console.error('Failed to create event');
+        alert('Failed to create event. Please try again.');
       }
-    } catch (error) {
-      console.error('Error submitting event data:', error);
+    } catch (err) {
+      console.error('Failed to save event', err);
+      alert('Error creating event. Please try again.');
+    } finally {
+      setShowPopup(false);
     }
-  };
+  }
 
-  const handleOpenPopup = () => {
-    setShowPopup(true);
-  };
-
-  const handleClosePopup = () => {
-    setShowPopup(false);
-    setSelectedDates({ start: null, end: null });
-    setSelectedEvent({
-      title: "",
-      doushi: "",
-      onkyo: "",
-      shikai: "",
-      uketsuke: "",
-      comment: ""
-    });
-  };
-
-  const handleEventChange = (propertyName, e) => {
-    setSelectedEvent(prevSelectedEvent => ({
-      ...prevSelectedEvent,
-      [propertyName]: e.target.value,
-    }));
-  };
-
-  const handleSelectEvent = (event) => {
-    setSelectedEvent(event);
+  function handleSelectEvent(ev) {
+    // invoked when user clicks an event in the calendar
+    setSelectedEvent(ev);
     setIsPopupVisible(true);
-  };
+  }
 
-  const handleEditEvent = async () => {
-        // Get the final start and end times
-        const finalStart = isStartModified ? new Date(start) : selectedEvent.start;
-        const finalEnd = isEndModified ? new Date(end) : selectedEvent.end;
+  async function handleEditEvent(e) {
+    if (e && e.preventDefault) e.preventDefault();
     
-        if (!selectedEvent || !selectedEvent.id) {
-            return;
-        }
-    
-        // Check if the end time is before the start time
-        if (finalEnd <= finalStart) {
-            alert("終了時間を入力してください。");
-            return; // Exit the function
-        }
-    
-        // Calculate time difference in milliseconds
-        const timeDiff = finalEnd - finalStart;
-        const fourHoursInMs = 4 * 60 * 60 * 1000;
-    
-        // Check if duration is more than 4 hours
-        if (timeDiff > fourHoursInMs) {
-            const confirmResponse = confirm('終了時間が開始時間から4時間以上経過していますが、このまま続けますか？');
-    
-            if (!confirmResponse) {
-                // If user clicks "Cancel", exit the function
-                return;
-            }
-            // If user clicks "OK", continue with the update
-        }
+    if (!selectedEvent.id) {
+      console.error('No event ID found for editing');
+      alert('Cannot edit event: No event ID found');
+      return;
+    }
 
     try {
-      const eventData = {
-        // id: selectedEvent.id,
+      // Prepare the update data
+      const updateData = {
         eventName: selectedEvent.title,
-        date: "",
-        startTime: finalStart,
-        endTime: finalEnd,
-        // startTime: start,
-        // endTime: end,
-        // endTime: selectedEvent.end.toString(),        
-        doushi: selectedEvent.doushi,
-        onkyo: selectedEvent.onkyo,
-        shikai: selectedEvent.shikai,
-        uketsuke: selectedEvent.uketsuke,
-        comment: selectedEvent.comment
+        startTime: selectedEvent.start.toISOString(),
+        endTime: selectedEvent.end.toISOString(),
+        doushi: selectedEvent.doushi || '',
+        onkyo: selectedEvent.onkyo || '',
+        shikai: selectedEvent.shikai || '',
+        uketsuke: selectedEvent.uketsuke || '',
+        comment: selectedEvent.comment || ''
       };
 
-      // Make a PUT request to update the event data in the database
+      // Make API call to update the event
       const response = await fetch(`/api/event?id=${selectedEvent.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(eventData),
+        body: JSON.stringify(updateData),
       });
 
       if (response.ok) {
-        const result = await response.json();
-        // Handle success response
-        console.log('Event data updated successfully!');
-        
-        // Show Google Calendar sync status
-        if (result.googleCalendarSync) {
-          if (result.googleCalendarSync.success) {
-            alert(`行事が正常に更新されました！\nGoogle Calendar同期: ${result.googleCalendarSync.message}`);
-          } else {
-            alert(`行事が更新されましたが、Google Calendar同期に失敗しました。\nエラー: ${result.googleCalendarSync.message}`);
-          }
-        } else {
-          alert('行事が正常に更新されました！');
-        }
-        
+        // Update local state only after successful API call
+        setEvents(prev => prev.map(ev => ev.id === selectedEvent.id ? selectedEvent : ev));
         setIsPopupVisible(false);
-        fetchEvents();
-
-        // Reset state after successful edit
-        // setStart('');
-        // setEnd('');
-
-        setSelectedDates({ start: null, end: null });
-        setSelectedEvent({
-          title: "",
-          doushi: "",
-          onkyo: "",
-          shikai: "",
-          uketsuke: "",
-          comment: ""
-        });
+        console.log('Event updated successfully');
       } else {
-        // Handle error response
-        console.error('Failed to update event data');
-        alert('行事の更新に失敗しました。');
+        const errorData = await response.json();
+        console.error('Failed to update event:', errorData);
+        alert('Failed to update event. Please try again.');
       }
     } catch (error) {
-      console.error('Error updating event data:', error);
+      console.error('Error updating event:', error);
+      alert('Error updating event. Please try again.');
     }
-  };
+  }
 
-  const handleDeleteEvent = async () => {
+  async function handleDeleteEvent(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    
     if (!selectedEvent.id) {
+      console.error('No event ID found for deletion');
+      alert('Cannot delete event: No event ID found');
       return;
     }
+
+    // Add confirmation dialog
+    const isConfirmed = window.confirm(`Are you sure you want to delete the event "${selectedEvent.title}"?`);
+    if (!isConfirmed) {
+      return;
+    }
+
     try {
-      console.log(selectedEvent.id)
+      // Make API call to delete the event
       const response = await fetch(`/api/event?id=${selectedEvent.id}`, {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       if (response.ok) {
-        const result = await response.json();
-        // Handle success response
-        console.log('Event deleted successfully!');
-        
-        // Show Google Calendar sync status
-        if (result.googleCalendarSync) {
-          if (result.googleCalendarSync.success) {
-            alert(`行事が正常に削除されました！\nGoogle Calendar同期: ${result.googleCalendarSync.message}`);
-          } else {
-            alert(`行事が削除されましたが、Google Calendar同期に失敗しました。\nエラー: ${result.googleCalendarSync.message}`);
-          }
-        } else {
-          alert('行事が正常に削除されました！');
-        }
-        
-        // Filter out the deleted event from the events array
-        const updatedEvents = events.filter(event => event.id !== selectedEvent.id);
-        // Update the events state with the filtered events
-        setEvents(updatedEvents);
-        // Update the events state or perform any necessary actions
-        setSelectedEvent(null);
+        // Remove from local state only after successful API call
+        setEvents(prev => prev.filter(ev => ev.id !== selectedEvent.id));
         setIsPopupVisible(false);
+        console.log('Event deleted successfully');
       } else {
-        // Handle error response
-        console.error('Failed to delete event');
-        alert('行事の削除に失敗しました。');
+        const errorData = await response.json();
+        console.error('Failed to delete event:', errorData);
+        alert('Failed to delete event. Please try again.');
       }
     } catch (error) {
       console.error('Error deleting event:', error);
+      alert('Error deleting event. Please try again.');
     }
+  }
+
+  function handleSearch() {
+    /* noop for search component integration */
+  }
+
+  // Build a `data` object used throughout the component (prevents "data is not defined")
+  // Values come from state lists loaded from /api/settings (presetEvents, doushis, onkyos, shikais).
+  // Provide safe defaults so initial render does not crash.
+  const data = {
+    gyouji: presetEvents && presetEvents.length ? presetEvents : ['その他'],
+    doushis: doushis || [],
+    onkyos: onkyos || [],
+    shikais: shikais || [],
+    uketsukes: [], // add fetching/storing if you need reception staff list
   };
 
-  const { defaultDate, scrollToTime } = useMemo(
-    () => ({
-      defaultDate: new Date(2015, 3, 12),
-      scrollToTime: new Date(1970, 1, 1, 6),
-    }),
-    []
-  )
-
-  const resizeEvent = useCallback(
-    async ({ event, start, end }) => {
-      try {
-        // Make a PUT request to update the event data in the database
-        const response = await fetch(`/api/event?id=${event.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            eventName: event.title,
-            startTime: start.toISOString(),
-            endTime: end.toISOString(),
-            doushi: event.doushi,
-            onkyo: event.onkyo,
-            shikai: event.shikai,
-            uketsuke: event.uketsuke,
-            comment: event.comment,
-          }),
-        });
-
-        if (response.ok) {
-          // Handle success response
-          console.log('Event data updated successfully!');
-          // Update events state
-          setEvents((prevEvents) => {
-            const updatedEvents = prevEvents.map((prevEvent) => {
-              if (prevEvent.id === event.id) {
-                return { ...prevEvent, start, end };
-              }
-              return prevEvent;
-            });
-            return updatedEvents;
-          });
-        } else {
-          // Handle error response
-          console.error('Failed to update event data');
-        }
-      } catch (error) {
-        console.error('Error updating event data:', error);
-      }
-    },
-    [setEvents]
-  );
-
-  const [myEvents, setMyEvents] = useState(events)
-
-  //drug & copy proccess ==================================================
-
-  const moveEvent = useCallback(
-    async ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
-      const { allDay } = event;
-      if (!allDay && droppedOnAllDaySlot) {
-        event.allDay = true;
-      }
-
-      const updatedEvent = { ...event, start, end, allDay };
-
-      try {
-        // Make a PUT request to update the event data in the database
-        const response = await fetch(`/api/event?id=${event.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            eventName: event.title,
-            startTime: start.toISOString(),
-            endTime: end.toISOString(),
-            doushi: event.doushi,
-            onkyo: event.onkyo,
-            shikai: event.shikai,
-            uketsuke: event.uketsuke,
-            comment: event.comment,
-          }),
-        });
-
-        if (response.ok) {
-          // Handle success response
-          console.log('Event data updated successfully!');
-          // Update myEvents state
-          setMyEvents((prev) => {
-            const existingEvents = prev.filter((ev) => ev.id !== event.id);
-            return [...existingEvents, updatedEvent];
-          });
-
-          // Update events state
-          setEvents((prev) => {
-            const existingEvents = prev.filter((ev) => ev.id !== event.id);
-            return [...existingEvents, updatedEvent];
-          });
-        } else {
-          // Handle error response
-          console.error('Failed to update event data');
-        }
-      } catch (error) {
-        console.error('Error updating event data:', error);
-      }
-    },
-    [setMyEvents, setEvents]
-  );
-
-  const handleEventCopy = useCallback(
-    async ({ event, start, end, isAllDay: droppedOnAllDaySlot = false }) => {
-      const { allDay } = event;
-      if (!allDay && droppedOnAllDaySlot) {
-        event.allDay = true;
-      }
-
-      // const adjustedStart = new Date(start.getTime() - (start.setHours(start.getHours() - 9)));
-      // const adjustedEnd = new Date(end.getTime() - (end.setHours(end.getHours() - 9)));
-      const adjustedStart = new Date(start.getTime() - (start.getTimezoneOffset() * 60000));
-      const adjustedEnd = new Date(end.getTime() - (end.getTimezoneOffset() * 60000));
-
-      adjustedStart.setHours(adjustedStart.getHours() - 9);
-      adjustedEnd.setHours(adjustedEnd.getHours() - 9);
-
-      try {
-        const eventData = {
-          eventName: event.title,
-          date: "",
-          startTime: adjustedStart.toISOString(),
-          endTime: adjustedEnd.toISOString(),
-          doushi: event.doushi,
-          onkyo: event.onkyo,
-          shikai: event.shikai,
-          uketsuke: event.uketsuke,
-          comment: event.comment,
-        };
-
-        const response = await fetch('/api/event', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(eventData),
-        });
-
-        if (response.ok) {
-          console.log('Event copied successfully!');
-          fetchEvents(); // Fetch the updated event list from the server
-          setMyEvents((prev) => {
-            const existingEvents = prev.filter((ev) => ev.id !== event.id);
-            const newEvent = {
-              ...event,
-              start: adjustedStart,
-              end: adjustedEnd,
-            };
-            return [...existingEvents, newEvent];
-          });
-        } else {
-          console.error('Failed to copy event');
-        }
-      } catch (error) {
-        console.error('Error copying event:', error);
-      }
-    },
-    [fetchEvents, setMyEvents]
-  );
-
-
-  const handleEventPaste = ({ event, e }) => {
-    // Handle event paste logic here
-    console.log('Event pasted:', event);
-  };
-
-  const [filteredEvents, setFilteredEvents] = useState(events);
-
-  const handleSearch = (searchTerm) => {
-    const filtered = events.filter(
-      (event) =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.doushi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.onkyo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredEvents(filtered);
-  };
+  // Example usage in the event creation UI:
+  // when building your event creation form, use doushis/onkyos/shikais/presetEvents arrays
+  // e.g. <select value={newEvent.doushi} onChange={...}>{doushis.map(d=> <option key={d}>{d}</option>)}</select>
 
   return (
     <div className={styles.App}>
@@ -885,20 +409,15 @@ const fetchEvents = async () => {
       {/* <SearchComponent events={events} data={data} onSearch={handleSearch} /> */}
       <SearchPrayerForResurrection events={events} data={data} onSearch={handleSearch} />
       {/* <SearchComponent events={events} onSearch={handleSearch} /> */}
-      <form onSubmit={handleSubmit}>
-        {showPopup && (
-          <div className="popup">
-            <div className="popup-inner">
-              <h2>行事入力</h2>
+
+      {/* Event Creation Popup */}
+      {showPopup && (
+        <div className="popup">
+          <div className="popup-inner">
+            <h2>行事入力</h2>
+            <form onSubmit={handleSubmit}>
               <label>行事：</label>
               <select
-                style={{
-                  width: '60%',
-                  height: '30px',
-                  marginTop: '5px',
-                  marginRight: '10px',
-                }}
-                //   value={selectedEvent.title || ''}
                 onChange={(e) => handleEventChange('title', e)}
                 required
               >
@@ -911,35 +430,24 @@ const fetchEvents = async () => {
               </select>
               <br />
               <label>開始時間：{selectedDates.start ? selectedDates.start.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}</label>
-              {/* <label>開始時間：{selectedDates?.start ? selectedDates.start.toLocaleString('ja-JP') : ""}</label> */}
               <input
                 type="datetime-local"
-                // type="text"
                 value={selectedDates.start ? selectedDates.start.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}
-                style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                // onChange={(e) => setStart(e.target.value)}
                 onChange={(e) => {
                   const newDate = new Date(e.target.value);
-                  const adjustedTime = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000));// const adjustedStart = new Date(newDate);
-                  // newDate.setHours(newDate.getHours() + 9);
-                  // adjustedStart.setHours(newDate.getHours() - 9);
+                  const adjustedTime = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000));
                   setSelectedDates({ ...selectedDates, start: adjustedTime });
                 }}
                 required
               />
-              <br /> {/* 改行を挿入 */}
+              <br />
               <label>終了時間：{selectedDates.end ? selectedDates.end.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}</label>
               <input
                 type="datetime-local"
                 value={selectedDates.end ? selectedDates.end.toISOString('ja-JP').slice(0, 16) : ''}
-                style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                // onChange={(e) => setEnd(e.target.value)}
                 onChange={(e) => {
                   const newDate = new Date(e.target.value);
-                  const adjustedTime = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000));// const adjustedStart = new Date(newDate);
-
-                  // newDate.setHours(newDate.getHours() + 9);
-                  // newDate.setMinutes(newDate.getMinutes() - newDate.getTimezoneOffset());
+                  const adjustedTime = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000));
                   setSelectedDates({ ...selectedDates, end: adjustedTime });
                 }}
                 required
@@ -947,13 +455,6 @@ const fetchEvents = async () => {
               <br />
               <label>導師：</label>
               <select
-                style={{
-                  width: '60%',
-                  height: '30px',
-                  marginTop: '5px',
-                  marginRight: '10px',
-                }}
-                //   value={selectedEvent.doushi || ''}
                 onChange={(e) => handleEventChange('doushi', e)}
                 required
               >
@@ -967,15 +468,7 @@ const fetchEvents = async () => {
               <br />
               <label>音響：</label>
               <select
-                style={{
-                  width: '60%',
-                  height: '30px',
-                  marginTop: '5px',
-                  marginRight: '10px',
-                }}
-                //   value={selectedEvent.doushi || ''}
                 onChange={(e) => handleEventChange('onkyo', e)}
-              // required
               >
                 <option value="">音響選択</option>
                 {data.onkyos.map((onkyo, index) => (
@@ -987,15 +480,7 @@ const fetchEvents = async () => {
               <br />
               <label>司会：</label>
               <select
-                style={{
-                  width: '60%',
-                  height: '30px',
-                  marginTop: '5px',
-                  marginRight: '10px',
-                }}
-                //   value={selectedEvent.doushi || ''}
                 onChange={(e) => handleEventChange('shikai', e)}
-              // required
               >
                 <option value="">司会選択</option>
                 {data.shikais.map((shikai, index) => (
@@ -1007,15 +492,7 @@ const fetchEvents = async () => {
               <br />
               <label>受付：</label>
               <select
-                style={{
-                  width: '60%',
-                  height: '30px',
-                  marginTop: '5px',
-                  marginRight: '10px',
-                }}
-                //   value={selectedEvent.doushi || ''}
                 onChange={(e) => handleEventChange('uketsuke', e)}
-              // required
               >
                 <option value="">受付選択</option>
                 {data.uketsukes.map((uketsuke, index) => (
@@ -1028,22 +505,18 @@ const fetchEvents = async () => {
               <label>備考：</label>
               <input
                 type="text"
-                // value={selectedEvent.comment}
-                style={{ width: "80%", height: "30px", marginTop: "5px", marginRight: "10px" }}
                 onChange={(e) => setSelectedEvent({ ...selectedEvent, comment: e.target.value })}
                 placeholder="備考"
               />
               <br />
-              <button
-                style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
-                onClick={handleSubmit}>
+              <button type="submit">
                 行事の追加
               </button>
-              <button onClick={handleClosePopup}>キャンセル</button>
-            </div>
+              <button type="button" onClick={handleClosePopup}>キャンセル</button>
+            </form>
           </div>
-        )}
-      </form>
+        </div>
+      )}
 
       {/* <Calendar */}
       {isLoading ? (
@@ -1051,7 +524,7 @@ const fetchEvents = async () => {
       ) : (
         <DragAndDropCalendar
           localizer={localizer}
-          events={events}
+          events={showPopup || isPopupVisible ? [] : events}
           // events={eventsForCopy}
           style={{ height: 1600 }}
           min={min}
@@ -1227,12 +700,6 @@ const fetchEvents = async () => {
             <h2>行事の追加・変更・削除</h2>
             <label>行事：{selectedEvent.title || ''}</label>
             <select
-              style={{
-                width: '50%',
-                height: '30px',
-                marginTop: '5px',
-                marginLeft: '10px',
-              }}
               value={selectedEvent.title || ''}
               onChange={(e) => handleEventChange('title', e)}
               required
@@ -1250,7 +717,6 @@ const fetchEvents = async () => {
             <input
               type="datetime-local"
               // value={start}
-              style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
               onChange={(e) => {
                 console.log('New start time:', e.target.value);
                 setStart(e.target.value);
@@ -1264,7 +730,6 @@ const fetchEvents = async () => {
             <input
               type="datetime-local"
               // value={end}
-              style={{ width: "70%", height: "30px", marginTop: "5px", marginRight: "10px" }}
               onChange={(e) => {
                 setEnd(e.target.value)
                 setIsEndModified(true);
@@ -1275,12 +740,6 @@ const fetchEvents = async () => {
             <label>導師：</label>
             <label>導師：{selectedEvent.doushi || ''}</label>
             <select
-              style={{
-                width: '50%',
-                height: '30px',
-                marginTop: '5px',
-                marginLeft: '10px',
-              }}
               value={selectedEvent.doushi || ''}
               onChange={(e) => handleEventChange('doushi', e)}
               required
@@ -1315,12 +774,6 @@ const fetchEvents = async () => {
             <br />
             <label>司会：{selectedEvent.shikai || ''}</label>
             <select
-              style={{
-                width: '60%',
-                height: '30px',
-                marginTop: '5px',
-                marginRight: '10px',
-              }}
               value={selectedEvent.shikai || ''}
               onChange={(e) => handleEventChange('shikai', e)}
             // required
@@ -1335,12 +788,6 @@ const fetchEvents = async () => {
             <br />
             <label>受付：{selectedEvent.uketsuke || ''}</label>
             <select
-              style={{
-                width: '60%',
-                height: '30px',
-                marginTop: '5px',
-                marginRight: '10px',
-              }}
               value={selectedEvent.uketsuke || ''}
               onChange={(e) => handleEventChange('uketsuke', e)}
             // required
@@ -1357,27 +804,127 @@ const fetchEvents = async () => {
             <input
               type="text"
               value={selectedEvent.comment}
-              style={{ width: "80%", height: "30px", marginTop: "5px", marginRight: "10px" }}
               onChange={(e) => setSelectedEvent({ ...selectedEvent, comment: e.target.value })}
               placeholder="備考"
             />
             <br />
             <button
-              style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
               onClick={handleEditEvent}>
               行事の修正
             </button>
             <button
               onClick={handleDeleteEvent}
-              style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
             >行事の削除
             </button>
             {/* <br /> */}
             <button
-              style={{ width: "30%", height: "30px", marginTop: "5px", marginRight: "10px" }}
               onClick={() => setIsPopupVisible(false)}>
               キャンセル
             </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{ position: 'fixed', right: 12, top: 12, zIndex: 1000 }}>
+        <button 
+          onClick={() => setShowSettings(true)} 
+          style={{ 
+            padding: '8px 12px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}
+          onMouseOver={(e) => e.target.style.backgroundColor = '#0056b3'}
+          onMouseOut={(e) => e.target.style.backgroundColor = '#007bff'}
+        >
+          Settings
+        </button>
+      </div>
+
+      {showSettings && (
+        <div 
+          style={{
+            position: 'fixed', 
+            left: 0, 
+            top: 0, 
+            right: 0, 
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            zIndex: 9999,
+            backdropFilter: 'blur(2px)'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSettings(false);
+              setStatusMsg('');
+            }
+          }}
+        >
+          <div style={{ 
+            width: 520, 
+            background: '#fff', 
+            padding: 20, 
+            borderRadius: 8, 
+            zIndex: 10000,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <h3>Settings — Add item</h3>
+            <form onSubmit={handleAddSetting}>
+              <div style={{ marginBottom: 8 }}>
+                <label>Type: </label>
+                <select value={newItemType} onChange={e => setNewItemType(e.target.value)}>
+                  <option value="doushi">doushi (導師)</option>
+                  <option value="onkyo">onkyo (音響)</option>
+                  <option value="shikai">shikai (司会)</option>
+                  <option value="event">event (preset event)</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: 8 }}>
+                <label>Name: </label>
+                <input value={newItemName} onChange={e => setNewItemName(e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="submit" disabled={isSavingItem}>Add</button>
+                <button type="button" onClick={() => { setShowSettings(false); setStatusMsg(''); }}>Close</button>
+              </div>
+            </form>
+
+            <div style={{ marginTop: 12 }}>
+              <strong>Status:</strong> {statusMsg}
+            </div>
+
+            <hr style={{ margin: '12px 0' }} />
+
+            <div>
+              <h4>Current lists</h4>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div>
+                  <div><strong>doushi</strong></div>
+                  <ul>{doushis.map(d => <li key={d}>{d}</li>)}</ul>
+                </div>
+                <div>
+                  <div><strong>onkyo</strong></div>
+                  <ul>{onkyos.map(d => <li key={d}>{d}</li>)}</ul>
+                </div>
+                <div>
+                  <div><strong>shikai</strong></div>
+                  <ul>{shikais.map(d => <li key={d}>{d}</li>)}</ul>
+                </div>
+                <div>
+                  <div><strong>preset events</strong></div>
+                  <ul>{presetEvents.map(d => <li key={d}>{d}</li>)}</ul>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
