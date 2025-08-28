@@ -156,44 +156,55 @@ export default async function handler(req, res) {
         continue;
       }
 
-      // Start: show selections from existing data
+      // Start: show selections from settings data
       if (state.step === 'idle' && (userText.toLowerCase() === 'new event' || userText === '新規イベント')) {
-          // Fetch distinct event names from DB
+          // Fetch settings items from DB
           try {
-            const recent = await prisma.event.findMany({
-              orderBy: { date: 'asc' },
-              take: 200,
-              select: {
-                eventName: true,
-                date: true,
-                startTime: true,
-                endTime: true,
-                doushi: true,
-                onkyo: true,
-                shikai: true,
-              }
+            const settingsItems = await prisma.settingsItem.findMany({
+              orderBy: { createdAt: 'desc' },
             });
+            
+            // Group settings by type
+            const groupedSettings = settingsItems.reduce((acc, item) => {
+              acc[item.type] = acc[item.type] || [];
+              acc[item.type].push(item.name);
+              return acc;
+            }, {});
 
-            const names = uniqueArray(recent.map(r => r.eventName).filter(Boolean));
-            if (names.length === 0) {
-              // Fallback to original free-form flow if DB has no events
+            const eventNames = groupedSettings.event || [];
+            const doushis = groupedSettings.doushi || [];
+            const onkyos = groupedSettings.onkyo || [];
+            const shikais = groupedSettings.shikai || [];
+
+            if (eventNames.length === 0) {
+              // Fallback to original free-form flow if no preset events
               state = { step: 'awaiting_name', data: {} };
               conversationState[userId] = state;
-              await replyToUser(replyToken, 'No existing events found. What is the name of the event?');
+              await replyToUser(replyToken, 'No preset events found. What is the name of the event?');
               continue;
             }
 
-            // Save recent events for later use
-            state = { step: 'select_name', data: {}, options: { names, recent }, meta: {} };
+            // Save settings for later use
+            state = { 
+              step: 'select_name', 
+              data: {}, 
+              options: { 
+                names: eventNames, 
+                doushis, 
+                onkyos, 
+                shikais 
+              }, 
+              meta: {} 
+            };
             conversationState[userId] = state;
 
-            const listText = names.map((n, i) => `${i+1}) ${n}`).join('\n');
-            await replyToUser(replyToken, `Select an event name from existing data by number, or type "custom":\n${listText}\nType "custom" to enter a new name.`);
+            const listText = eventNames.map((n, i) => `${i+1}) ${n}`).join('\n');
+            await replyToUser(replyToken, `Select an event name from preset events by number, or type "custom":\n${listText}\nType "custom" to enter a new name.`);
           } catch (err) {
-            console.error('DB error when fetching names:', err);
+            console.error('DB error when fetching settings:', err);
             state = { step: 'awaiting_name', data: {} };
             conversationState[userId] = state;
-            await replyToUser(replyToken, 'Could not fetch existing events. What is the name of the event?');
+            await replyToUser(replyToken, 'Could not fetch preset events. What is the name of the event?');
           }
           continue;
       }
@@ -313,19 +324,18 @@ export default async function handler(req, res) {
         // proceed to role selection
         state.step = 'select_role';
         state.meta = { rolesOrder: ['doushi', 'onkyo', 'shikai'], roleIndex: 0 };
-        // prepare role options from recent events for this name
-        const recent = state.options.recent ? state.options.recent.filter(r => r.eventName === state.data.eventName) : [];
+        // prepare role options from settings
         const roleOptions = {
-          doushi: uniqueArray(recent.map(r => r.doushi).filter(Boolean)),
-          onkyo: uniqueArray(recent.map(r => r.onkyo).filter(Boolean)),
-          shikai: uniqueArray(recent.map(r => r.shikai).filter(Boolean)),
+          doushi: state.options.doushis || [],
+          onkyo: state.options.onkyos || [],
+          shikai: state.options.shikais || [],
         };
         state.options.roles = roleOptions;
         conversationState[userId] = state;
 
         const currentRole = state.meta.rolesOrder[state.meta.roleIndex];
         const opts = (state.options.roles[currentRole] || []);
-        const list = opts.length ? opts.map((o, i) => `${i+1}) ${o}`).join('\n') : '(no recent names)';
+        const list = opts.length ? opts.map((o, i) => `${i+1}) ${o}`).join('\n') : '(no preset names)';
         await replyToUser(replyToken, `Select ${currentRole} by number, or type a name directly, or "none":\n${list}`);
         continue;
       }
@@ -364,7 +374,7 @@ export default async function handler(req, res) {
           conversationState[userId] = state;
           const nextRole = rolesOrder[idx];
           const nextOpts = (state.options.roles[nextRole] || []);
-          const list = nextOpts.length ? nextOpts.map((o, i) => `${i+1}) ${o}`).join('\n') : '(no recent names)';
+          const list = nextOpts.length ? nextOpts.map((o, i) => `${i+1}) ${o}`).join('\n') : '(no preset names)';
           await replyToUser(replyToken, `Select ${nextRole} by number, or type a name directly, or "none":\n${list}`);
           continue;
         }
