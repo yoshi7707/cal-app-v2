@@ -829,19 +829,26 @@ const MyCalendar = () => {
         <button 
           onClick={() => setShowSettings(true)} 
           style={{ 
-            padding: '8px 12px',
+            padding: '12px',
             backgroundColor: '#007bff',
             color: 'white',
             border: 'none',
-            borderRadius: '4px',
+            borderRadius: '50%',
             cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
+            fontSize: '36px',
+            fontWeight: '500',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
           }}
           onMouseOver={(e) => e.target.style.backgroundColor = '#0056b3'}
           onMouseOut={(e) => e.target.style.backgroundColor = '#007bff'}
+          title="Settings"
         >
-          Settings
+          ⚙️
         </button>
       </div>
 
