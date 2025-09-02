@@ -341,7 +341,8 @@ export default async function handler(req, res) {
 
         const currentRole = state.meta.rolesOrder[state.meta.roleIndex];
         const opts = (state.options.roles[currentRole] || []);
-        const list = opts.length ? opts.map((o, i) => `${i + 1}) ${o}`).join('\n') : '(プリセット名なし)';
+        // Add "1) なし" as the first option. The rest of the names start from 2.
+        const list = `1) なし\n` + (opts.length ? opts.map((o, i) => `${i + 2}) ${o}`).join('\n') : '(プリセット名なし)');
 
         // Map role names to Japanese
         const roleNames = {
@@ -351,7 +352,7 @@ export default async function handler(req, res) {
         };
         const roleName = roleNames[currentRole] || currentRole;
 
-        await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力するか、「なし」と入力してください：\n${list}`);
+        await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
         continue;
       }
 
@@ -361,19 +362,27 @@ export default async function handler(req, res) {
         let idx = state.meta.roleIndex;
         const currentRole = rolesOrder[idx];
 
-        // if user typed a number and options exist
         const num = parseInt(userText, 10);
-        const opts = state.options.roles[currentRole] || [];
-        if (Number.isInteger(num) && opts[num - 1]) {
-          state.data[currentRole] = opts[num - 1];
-        } else {
-          const lower = userText.toLowerCase();
-          if (lower === 'none' || lower === 'なし') {
+        // Check if the user input is a number
+        if (Number.isInteger(num)) {
+          if (num === 1) {
+            // User selected "1) なし"
             state.data[currentRole] = 'N/A';
           } else {
-            // treat input as direct name
-            state.data[currentRole] = userText;
+            // User selected a name from the list (which starts at index 2)
+            const opts = state.options.roles[currentRole] || [];
+            const selectedName = opts[num - 2]; // Adjust index
+            if (selectedName) {
+              state.data[currentRole] = selectedName;
+            } else {
+              // The number was out of range
+              await replyToUser(replyToken, `無効な番号です。リストから選択してください。`);
+              continue; // Stay in the same step
+            }
           }
+        } else {
+          // If not a number, treat it as a directly typed name
+          state.data[currentRole] = userText;
         }
 
         idx += 1;
@@ -381,7 +390,7 @@ export default async function handler(req, res) {
           // done with roles, ask comment
           state.step = 'awaiting_comment';
           conversationState[userId] = state;
-          await replyToUser(replyToken, '役割が設定されました。コメントはありますか？（コメントがない場合は「なし」と入力してください）');
+          await replyToUser(replyToken, '役割が設定されました。コメントはありますか？\n1) なし\nコメント内容を直接入力することもできます。');
           continue;
         } else {
           // ask next role
@@ -389,7 +398,8 @@ export default async function handler(req, res) {
           conversationState[userId] = state;
           const nextRole = rolesOrder[idx];
           const nextOpts = (state.options.roles[nextRole] || []);
-          const list = nextOpts.length ? nextOpts.map((o, i) => `${i + 1}) ${o}`).join('\n') : '(プリセット名なし)';
+          // Add "1) なし" as the first option for the next role as well.
+          const list = `1) なし\n` + (nextOpts.length ? nextOpts.map((o, i) => `${i + 2}) ${o}`).join('\n') : '(プリセット名なし)');
 
           // Map role names to Japanese
           const roleNames = {
@@ -399,7 +409,7 @@ export default async function handler(req, res) {
           };
           const roleName = roleNames[nextRole] || nextRole;
 
-          await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力するか、「なし」と入力してください：\n${list}`);
+          await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
           continue;
         }
       }
@@ -435,7 +445,12 @@ export default async function handler(req, res) {
         await replyToUser(replyToken, '役割が割り当てられました。コメントはありますか？（コメントがない場合は「なし」と入力してください）');
         continue;
       } else if (state.step === 'awaiting_comment') {
-        state.data.comment = (userText.toLowerCase() === 'none' || userText === 'なし') ? '' : userText;
+        // Handle "1" or "なし" for no comment, otherwise use the text.
+        if (userText === '1' || userText.toLowerCase() === 'none' || userText === 'なし') {
+          state.data.comment = '';
+        } else {
+          state.data.comment = userText;
+        }
         conversationState[userId] = state;
 
         try {
@@ -466,7 +481,7 @@ export default async function handler(req, res) {
             data: { googleEventId: googleEvent.id },
           });
 
-          await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成され、Googleカレンダーに追加されました。`);
+          await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成されました😃`);
 
         } catch (error) {
           console.error('Failed to create event:', error);
