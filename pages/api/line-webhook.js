@@ -50,47 +50,47 @@ async function replyToUser(replyToken, messageText) {
 }
 
 function parseDate(dateString) {
-    const today = new Date();
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate() + 1);
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
 
-    dateString = dateString.toLowerCase();
+  dateString = dateString.toLowerCase();
 
-    if (dateString === 'today' || dateString === '今日') {
-        return today;
+  if (dateString === 'today' || dateString === '今日') {
+    return today;
+  }
+  if (dateString === 'tomorrow' || dateString === '明日') {
+    return tomorrow;
+  }
+
+  const weekdays = {
+    'sunday': 0, '日曜日': 0,
+    'monday': 1, '月曜日': 1,
+    'tuesday': 2, '火曜日': 2,
+    'wednesday': 3, '水曜日': 3,
+    'thursday': 4, '木曜日': 4,
+    'friday': 5, '金曜日': 5,
+    'saturday': 6, '土曜日': 6,
+  };
+
+  for (const day in weekdays) {
+    if (dateString.includes(day)) {
+      let targetDay = weekdays[day];
+      let resultDate = new Date();
+      resultDate.setDate(today.getDate() + (targetDay - today.getDay() + 7) % 7);
+      if (dateString.startsWith('next') || dateString.startsWith('来週')) {
+        resultDate.setDate(resultDate.getDate() + 7);
+      }
+      return resultDate;
     }
-    if (dateString === 'tomorrow' || dateString === '明日') {
-        return tomorrow;
-    }
-    
-    const weekdays = {
-        'sunday': 0, '日曜日': 0,
-        'monday': 1, '月曜日': 1,
-        'tuesday': 2, '火曜日': 2,
-        'wednesday': 3, '水曜日': 3,
-        'thursday': 4, '木曜日': 4,
-        'friday': 5, '金曜日': 5,
-        'saturday': 6, '土曜日': 6,
-    };
+  }
 
-    for (const day in weekdays) {
-        if (dateString.includes(day)) {
-            let targetDay = weekdays[day];
-            let resultDate = new Date();
-            resultDate.setDate(today.getDate() + (targetDay - today.getDay() + 7) % 7);
-            if (dateString.startsWith('next') || dateString.startsWith('来週')) {
-                resultDate.setDate(resultDate.getDate() + 7);
-            }
-            return resultDate;
-        }
-    }
+  const parsedDate = new Date(dateString);
+  if (!isNaN(parsedDate.getTime())) {
+    return parsedDate;
+  }
 
-    const parsedDate = new Date(dateString);
-    if (!isNaN(parsedDate.getTime())) {
-        return parsedDate;
-    }
-
-    return null;
+  return null;
 }
 
 function uniqueArray(arr) {
@@ -98,27 +98,28 @@ function uniqueArray(arr) {
 }
 
 function formatDateTimeLabel(item) {
-  // item: { date, startTime, endTime } where startTime/endTime are ISO strings (or time strings)
+  // item: { date, startTime, endTime } where startTime/endTime are ISO strings
   try {
     const date = item.date || (item.startTime ? item.startTime.split('T')[0] : '');
-    const fmtHM = (isoOrTime) => {
-      if (!isoOrTime) return '';
-      // Try to parse into a Date and format in local time to avoid UTC shift issues
-      const d = new Date(isoOrTime);
-      if (!isNaN(d.getTime())) {
-        const hh = String(d.getHours()).padStart(2, '0');
-        const mm = String(d.getMinutes()).padStart(2, '0');
-        return `${hh}:${mm}`;
-      }
-      // fallback: if it's like "YYYY-MM-DDTHH:MM:SS" or "HH:MM:SS"
-      const maybe = String(isoOrTime);
-      if (maybe.includes('T')) return maybe.split('T')[1].slice(0,5);
-      return maybe.slice(0,5);
+
+    // Helper to format an ISO string into HH:mm in JST
+    const fmtHM_JST = (isoString) => {
+      if (!isoString) return '';
+      // Create a Date object, then format it specifically for the 'Asia/Tokyo' timezone
+      return new Date(isoString).toLocaleTimeString('ja-JP', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Tokyo'
+      });
     };
-    const start = fmtHM(item.startTime);
-    const end = fmtHM(item.endTime);
+
+    const start = fmtHM_JST(item.startTime);
+    const end = fmtHM_JST(item.endTime);
+
     return `${date} ${start || ''}${end ? '-' + end : ''}`.trim();
   } catch (e) {
+    console.error("Error formatting date time label:", e);
     return JSON.stringify(item);
   }
 }
@@ -158,55 +159,55 @@ export default async function handler(req, res) {
 
       // Start: show selections from settings data
       if (state.step === 'idle' && (userText.toLowerCase() === 'new event' || userText === '新規行事')) {
-          // Fetch settings items from DB
-          try {
-            const settingsItems = await prisma.settingsItem.findMany({
-              orderBy: { createdAt: 'desc' },
-            });
-            
-            // Group settings by type
-            const groupedSettings = settingsItems.reduce((acc, item) => {
-              acc[item.type] = acc[item.type] || [];
-              acc[item.type].push(item.name);
-              return acc;
-            }, {});
+        // Fetch settings items from DB
+        try {
+          const settingsItems = await prisma.settingsItem.findMany({
+            orderBy: { createdAt: 'desc' },
+          });
 
-            const eventNames = groupedSettings.event || [];
-            const doushis = groupedSettings.doushi || [];
-            const onkyos = groupedSettings.onkyo || [];
-            const shikais = groupedSettings.shikai || [];
+          // Group settings by type
+          const groupedSettings = settingsItems.reduce((acc, item) => {
+            acc[item.type] = acc[item.type] || [];
+            acc[item.type].push(item.name);
+            return acc;
+          }, {});
 
-            if (eventNames.length === 0) {
-              // Fallback to original free-form flow if no preset events
-              state = { step: 'awaiting_name', data: {} };
-              conversationState[userId] = state;
-              await replyToUser(replyToken, 'プリセット行事が見つかりません。行事名を入力してください。');
-              continue;
-            }
+          const eventNames = groupedSettings.event || [];
+          const doushis = groupedSettings.doushi || [];
+          const onkyos = groupedSettings.onkyo || [];
+          const shikais = groupedSettings.shikai || [];
 
-            // Save settings for later use
-            state = { 
-              step: 'select_name', 
-              data: {}, 
-              options: { 
-                names: eventNames, 
-                doushis, 
-                onkyos, 
-                shikais 
-              }, 
-              meta: {} 
-            };
-            conversationState[userId] = state;
-
-            const listText = eventNames.map((n, i) => `${i+1}) ${n}`).join('\n');
-            await replyToUser(replyToken, `プリセット行事から番号で選択するか、「カスタム」と入力してください：\n${listText}\n新しい行事名を入力する場合は「カスタム」と入力してください。`);
-          } catch (err) {
-            console.error('DB error when fetching settings:', err);
+          if (eventNames.length === 0) {
+            // Fallback to original free-form flow if no preset events
             state = { step: 'awaiting_name', data: {} };
             conversationState[userId] = state;
-            await replyToUser(replyToken, 'プリセット行事の取得に失敗しました。行事名を入力してください。');
+            await replyToUser(replyToken, 'プリセット行事が見つかりません。行事名を入力してください。');
+            continue;
           }
-          continue;
+
+          // Save settings for later use
+          state = {
+            step: 'select_name',
+            data: {},
+            options: {
+              names: eventNames,
+              doushis,
+              onkyos,
+              shikais
+            },
+            meta: {}
+          };
+          conversationState[userId] = state;
+
+          const listText = eventNames.map((n, i) => `${i + 1}) ${n}`).join('\n');
+          await replyToUser(replyToken, `プリセット行事から番号で選択するか、「カスタム」と入力してください：\n${listText}\n新しい行事名を入力する場合は「カスタム」と入力してください。`);
+        } catch (err) {
+          console.error('DB error when fetching settings:', err);
+          state = { step: 'awaiting_name', data: {} };
+          conversationState[userId] = state;
+          await replyToUser(replyToken, 'プリセット行事の取得に失敗しました。行事名を入力してください。');
+        }
+        continue;
       }
 
       // Selecting an existing name
@@ -225,7 +226,7 @@ export default async function handler(req, res) {
 
           // Build date-only list from today -> one month ahead (so reply is compact)
           const startDate = new Date();
-          startDate.setHours(0,0,0,0);
+          startDate.setHours(0, 0, 0, 0);
           const endDate = new Date(startDate);
           endDate.setMonth(endDate.getMonth() + 1);
 
@@ -246,7 +247,7 @@ export default async function handler(req, res) {
           state.step = 'select_datetime';
           conversationState[userId] = state;
 
-          const dateListText = dateOptions.map((d, i) => `${i+1}) ${d}`).join('\n');
+          const dateListText = dateOptions.map((d, i) => `${i + 1}) ${d}`).join('\n');
           await replyToUser(replyToken, `"${chosenName}"の日付を番号で選択してください（今日から1ヶ月後まで）、または「カスタム」と入力してください：\n${dateListText}`);
           continue;
         } else {
@@ -284,7 +285,7 @@ export default async function handler(req, res) {
         if (state.meta && state.meta.datetimeStage === 'date') {
           const dateIdx = num - 1;
           if (!state.options || !state.options.dateOptions || dateIdx < 0 || dateIdx >= state.options.dateOptions.length) {
-            await replyToUser(replyToken, `無効な選択です。1から${state.options && state.options.dateOptions ? state.options.dateOptions.length : 31}までの番号で返信してください。`);
+            await replyToUser(replyToken, `Invalid selection. Reply with a number between 1 and ${state.options && state.options.dateOptions ? state.options.dateOptions.length : 31}.`);
             continue;
           }
           const chosenDate = state.options.dateOptions[dateIdx];
@@ -296,17 +297,22 @@ export default async function handler(req, res) {
             const sm = minutes % 60;
             const eh = Math.floor((minutes + tpl.stepMinutes) / 60);
             const em = (minutes + tpl.stepMinutes) % 60;
-            const startTimeStr = `${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}:00`;
-            const endTimeStr = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}:00`;
-            const startISO = new Date(`${chosenDate}T${startTimeStr}`).toISOString();
-            const endISO = new Date(`${chosenDate}T${endTimeStr}`).toISOString();
+
+            // Construct date strings in JST by appending the timezone offset
+            const startTimeStrJST = `${chosenDate}T${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}:00+09:00`;
+            const endTimeStrJST = `${chosenDate}T${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}:00+09:00`;
+
+            // Create Date objects from the JST strings and then convert to ISO strings (which are always UTC)
+            const startISO = new Date(startTimeStrJST).toISOString();
+            const endISO = new Date(endTimeStrJST).toISOString();
+
             slots.push({ date: chosenDate, startTime: startISO, endTime: endISO });
           }
           state.options.timeSlots = slots;
           state.meta.datetimeStage = 'time';
           state.step = 'select_datetime';
           conversationState[userId] = state;
-          const timesText = slots.map((s, i) => `${i+1}) ${formatDateTimeLabel(s)}`).join('\n');
+          const timesText = slots.map((s, i) => `${i + 1}) ${formatDateTimeLabel(s)}`).join('\n');
           await replyToUser(replyToken, `${chosenDate}の時刻を番号で選択してください：\n${timesText}`);
           continue;
         }
@@ -335,8 +341,9 @@ export default async function handler(req, res) {
 
         const currentRole = state.meta.rolesOrder[state.meta.roleIndex];
         const opts = (state.options.roles[currentRole] || []);
-        const list = opts.length ? opts.map((o, i) => `${i+1}) ${o}`).join('\n') : '(プリセット名なし)';
-        
+        // Add "1) なし" as the first option. The rest of the names start from 2.
+        const list = `1) なし\n` + (opts.length ? opts.map((o, i) => `${i + 2}) ${o}`).join('\n') : '(プリセット名なし)');
+
         // Map role names to Japanese
         const roleNames = {
           'doushi': '導師',
@@ -344,8 +351,8 @@ export default async function handler(req, res) {
           'shikai': '司会'
         };
         const roleName = roleNames[currentRole] || currentRole;
-        
-        await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力するか、「なし」と入力してください：\n${list}`);
+
+        await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
         continue;
       }
 
@@ -355,19 +362,27 @@ export default async function handler(req, res) {
         let idx = state.meta.roleIndex;
         const currentRole = rolesOrder[idx];
 
-        // if user typed a number and options exist
         const num = parseInt(userText, 10);
-        const opts = state.options.roles[currentRole] || [];
-        if (Number.isInteger(num) && opts[num-1]) {
-          state.data[currentRole] = opts[num-1];
-        } else {
-          const lower = userText.toLowerCase();
-          if (lower === 'none' || lower === 'なし') {
+        // Check if the user input is a number
+        if (Number.isInteger(num)) {
+          if (num === 1) {
+            // User selected "1) なし"
             state.data[currentRole] = 'N/A';
           } else {
-            // treat input as direct name
-            state.data[currentRole] = userText;
+            // User selected a name from the list (which starts at index 2)
+            const opts = state.options.roles[currentRole] || [];
+            const selectedName = opts[num - 2]; // Adjust index
+            if (selectedName) {
+              state.data[currentRole] = selectedName;
+            } else {
+              // The number was out of range
+              await replyToUser(replyToken, `無効な番号です。リストから選択してください。`);
+              continue; // Stay in the same step
+            }
           }
+        } else {
+          // If not a number, treat it as a directly typed name
+          state.data[currentRole] = userText;
         }
 
         idx += 1;
@@ -375,7 +390,7 @@ export default async function handler(req, res) {
           // done with roles, ask comment
           state.step = 'awaiting_comment';
           conversationState[userId] = state;
-          await replyToUser(replyToken, '役割が設定されました。コメントはありますか？（コメントがない場合は「なし」と入力してください）');
+          await replyToUser(replyToken, '役割が設定されました。コメントはありますか？\n1) なし\nコメント内容を直接入力することもできます。');
           continue;
         } else {
           // ask next role
@@ -383,8 +398,9 @@ export default async function handler(req, res) {
           conversationState[userId] = state;
           const nextRole = rolesOrder[idx];
           const nextOpts = (state.options.roles[nextRole] || []);
-          const list = nextOpts.length ? nextOpts.map((o, i) => `${i+1}) ${o}`).join('\n') : '(プリセット名なし)';
-          
+          // Add "1) なし" as the first option for the next role as well.
+          const list = `1) なし\n` + (nextOpts.length ? nextOpts.map((o, i) => `${i + 2}) ${o}`).join('\n') : '(プリセット名なし)');
+
           // Map role names to Japanese
           const roleNames = {
             'doushi': '導師',
@@ -392,83 +408,88 @@ export default async function handler(req, res) {
             'shikai': '司会'
           };
           const roleName = roleNames[nextRole] || nextRole;
-          
-          await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力するか、「なし」と入力してください：\n${list}`);
+
+          await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
           continue;
         }
       }
 
       // Fallback: original free-form flows for name/date if user chose custom or DB empty
       if (state.step === 'awaiting_name') {
-          state.data.eventName = userText;
-          // switch to structured date selection
-          state.step = 'select_year';
-          conversationState[userId] = state;
-          await replyToUser(replyToken, `了解しました。"${userText}"の年を選択してください：\n1) 2025\n2) 2026\n番号で返信してください。`);
-          continue;
+        state.data.eventName = userText;
+        // switch to structured date selection
+        state.step = 'select_year';
+        conversationState[userId] = state;
+        await replyToUser(replyToken, `了解しました。"${userText}"の年を選択してください：\n1) 2025\n2) 2026\n番号で返信してください。`);
+        continue;
       } else if (state.step === 'awaiting_date') {
-          // legacy branch preserved but not used; keep for safety
-          await replyToUser(replyToken, '提供された選択フローを使用してください（年→月→日の順で選択）。');
-          continue;
+        // legacy branch preserved but not used; keep for safety
+        await replyToUser(replyToken, '提供された選択フローを使用してください（年→月→日の順で選択）。');
+        continue;
       } else if (state.step === 'awaiting_roles') {
-          // legacy path — keep for compatibility but prefer select_role flow
-          const roles = userText.split(',').map(p => p.trim());
-          state.data.doushi = 'N/A';
-          state.data.onkyo = 'N/A';
-          state.data.shikai = 'N/A';
-          roles.forEach(role => {
-              const [roleName, personName] = role.split(':').map(s => s.trim());
-              if (roleName && personName) {
-                  if (roleName.toLowerCase() === 'doushi' || roleName === '導師') state.data.doushi = personName;
-                  if (roleName.toLowerCase() === 'onkyo' || roleName === '音響') state.data.onkyo = personName;
-                  if (roleName.toLowerCase() === 'shikai' || roleName === '司会') state.data.shikai = personName;
-              }
-          });
-          state.step = 'awaiting_comment';
-          conversationState[userId] = state;
-          await replyToUser(replyToken, '役割が割り当てられました。コメントはありますか？（コメントがない場合は「なし」と入力してください）');
-          continue;
-      } else if (state.step === 'awaiting_comment') {
-          state.data.comment = (userText.toLowerCase() === 'none' || userText === 'なし') ? '' : userText;
-          conversationState[userId] = state;
-
-          try {
-              const newEvent = await prisma.event.create({
-                  data: {
-                      eventName: state.data.eventName,
-                      date: state.data.date,
-                      startTime: state.data.startTime,
-                      endTime: state.data.endTime,
-                      doushi: state.data.doushi || 'N/A',
-                      onkyo: state.data.onkyo || 'N/A',
-                      shikai: state.data.shikai || 'N/A',
-                      comment: state.data.comment || '',
-                  }
-              });
-
-              const googleEventData = {
-                  title: newEvent.eventName,
-                  description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n司会: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
-                  start: newEvent.startTime,
-                  end: newEvent.endTime,
-                  allDay: false,
-              };
-              const googleEvent = await createGoogleCalendarEvent(googleEventData);
-
-              await prisma.event.update({
-                  where: { id: newEvent.id },
-                  data: { googleEventId: googleEvent.id },
-              });
-
-              await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成され、Googleカレンダーに追加されました。`);
-
-          } catch (error) {
-              console.error('Failed to create event:', error);
-              await replyToUser(replyToken, `申し訳ございません。行事の作成中にエラーが発生しました：${error.message}`);
-          } finally {
-              delete conversationState[userId];
+        // legacy path — keep for compatibility but prefer select_role flow
+        const roles = userText.split(',').map(p => p.trim());
+        state.data.doushi = 'N/A';
+        state.data.onkyo = 'N/A';
+        state.data.shikai = 'N/A';
+        roles.forEach(role => {
+          const [roleName, personName] = role.split(':').map(s => s.trim());
+          if (roleName && personName) {
+            if (roleName.toLowerCase() === 'doushi' || roleName === '導師') state.data.doushi = personName;
+            if (roleName.toLowerCase() === 'onkyo' || roleName === '音響') state.data.onkyo = personName;
+            if (roleName.toLowerCase() === 'shikai' || roleName === '司会') state.data.shikai = personName;
           }
-          continue;
+        });
+        state.step = 'awaiting_comment';
+        conversationState[userId] = state;
+        await replyToUser(replyToken, '役割が割り当てられました。コメントはありますか？（コメントがない場合は「なし」と入力してください）');
+        continue;
+      } else if (state.step === 'awaiting_comment') {
+        // Handle "1" or "なし" for no comment, otherwise use the text.
+        if (userText === '1' || userText.toLowerCase() === 'none' || userText === 'なし') {
+          state.data.comment = '';
+        } else {
+          state.data.comment = userText;
+        }
+        conversationState[userId] = state;
+
+        try {
+          const newEvent = await prisma.event.create({
+            data: {
+              eventName: state.data.eventName,
+              date: state.data.date,
+              startTime: state.data.startTime,
+              endTime: state.data.endTime,
+              doushi: state.data.doushi || 'N/A',
+              onkyo: state.data.onkyo || 'N/A',
+              shikai: state.data.shikai || 'N/A',
+              comment: state.data.comment || '',
+            }
+          });
+
+          const googleEventData = {
+            title: newEvent.eventName,
+            description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n司会: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
+            start: newEvent.startTime,
+            end: newEvent.endTime,
+            allDay: false,
+          };
+          const googleEvent = await createGoogleCalendarEvent(googleEventData);
+
+          await prisma.event.update({
+            where: { id: newEvent.id },
+            data: { googleEventId: googleEvent.id },
+          });
+
+          await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成されました😃`);
+
+        } catch (error) {
+          console.error('Failed to create event:', error);
+          await replyToUser(replyToken, `申し訳ございません。行事の作成中にエラーが発生しました：${error.message}`);
+        } finally {
+          delete conversationState[userId];
+        }
+        continue;
       }
 
       // If no matching flow, prompt user quickly
