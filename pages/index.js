@@ -45,6 +45,44 @@ const EventComponent = ({ event }) => (
   </div>
 );
 
+/**
+ * Formats a Date object into a 'YYYY-MM-DDTHH:mm' string in the local timezone.
+ * This is the format required by the <input type="datetime-local">.
+ * @param {Date} date The date to format.
+ * @returns {string} The formatted string.
+ */
+const formatToLocalDateTimeString = (date) => {
+  if (!date || !(date instanceof Date)) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+const formatTimeForInput = (date) => {
+  if (!date) return '';
+  // Create a new date object to avoid modifying the original
+  const localDate = new Date(date);
+  // Format as HH:mm in local timezone
+  return localDate.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+};
+
+const parseTimeInput = (timeStr, baseDate) => {
+  if (!timeStr || !baseDate) return null;
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const date = new Date(baseDate);
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+};
+
 const MyCalendar = () => {
   const [events, setEvents] = useState([]);
   const [title, setTitle] = useState('');
@@ -82,7 +120,7 @@ const MyCalendar = () => {
   const [isEndModified, setIsEndModified] = useState(false);
 
   const scrollToTime = new Date();
-  const resizeEvent = () => {};
+  const resizeEvent = () => { };
 
   useEffect(() => {
     // load settings lists on mount
@@ -200,6 +238,19 @@ const MyCalendar = () => {
     setSelectedEvent(prev => ({ ...prev, [field]: value }));
   }
 
+  function handleTimeChange(field, timeStr) {
+    const baseDate = field === 'start' ? selectedEvent.start : selectedEvent.end;
+    if (!baseDate) return;
+
+    const newDate = parseTimeInput(timeStr, baseDate);
+    if (!newDate) return;
+
+    setSelectedEvent(prev => ({
+      ...prev,
+      [field]: newDate
+    }));
+  }
+
   async function handleSubmit(e) {
     if (e && e.preventDefault) e.preventDefault();
     const startDate = selectedDates.start || selectedEvent.start || new Date();
@@ -262,7 +313,7 @@ const MyCalendar = () => {
 
   async function handleEditEvent(e) {
     if (e && e.preventDefault) e.preventDefault();
-    
+
     if (!selectedEvent.id) {
       console.error('No event ID found for editing');
       alert('Cannot edit event: No event ID found');
@@ -281,7 +332,7 @@ const MyCalendar = () => {
         uketsuke: selectedEvent.uketsuke || '',
         comment: selectedEvent.comment || ''
       };
-      
+
       console.log('Updating event with data:', updateData);
       console.log('selectedEvent.start:', selectedEvent.start);
       console.log('selectedEvent.end:', selectedEvent.end);
@@ -321,7 +372,7 @@ const MyCalendar = () => {
           // Fallback to local state update
           setEvents(prev => prev.map(ev => ev.id === selectedEvent.id ? selectedEvent : ev));
         }
-        
+
         setIsPopupVisible(false);
         console.log('Event updated successfully');
       } else {
@@ -337,7 +388,7 @@ const MyCalendar = () => {
 
   async function handleDeleteEvent(e) {
     if (e && e.preventDefault) e.preventDefault();
-    
+
     if (!selectedEvent.id) {
       console.error('No event ID found for deletion');
       alert('Cannot delete event: No event ID found');
@@ -398,7 +449,7 @@ const MyCalendar = () => {
     <div className={styles.App}>
       <h2>＜越谷支部行事一覧＞</h2>
 
-{/* <button 
+      {/* <button 
   onClick={syncWithGoogleCalendar}
   style={{
     backgroundColor: '#4285f4',
@@ -413,7 +464,7 @@ const MyCalendar = () => {
   Sync with Google Calendar
 </button> */}
 
-{/* <button 
+      {/* <button 
   onClick={syncToGoogleCalendar}
   style={{
     backgroundColor: '#34a853',
@@ -428,7 +479,7 @@ const MyCalendar = () => {
   Sync TO Google Calendar
 </button> */}
 
-<br />
+      <br />
       <button
         style={{ width: "30%", height: "30px", marginTop: "10px", marginRight: "10px", marginBottom: "20px" }}
         onClick={handleOpenPopup}>
@@ -457,26 +508,24 @@ const MyCalendar = () => {
                 ))}
               </select>
               <br />
-              <label>開始時間：{selectedDates.start ? selectedDates.start.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}</label>
+              <label>開始時間：{selectedDates.start ? selectedDates.start.toLocaleString('ja-JP') : ''}</label>
               <input
                 type="datetime-local"
-                value={selectedDates.start ? selectedDates.start.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}
+                value={formatToLocalDateTimeString(selectedDates.start)}
                 onChange={(e) => {
                   const newDate = new Date(e.target.value);
-                  const adjustedTime = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000));
-                  setSelectedDates({ ...selectedDates, start: adjustedTime });
+                  setSelectedDates({ ...selectedDates, start: newDate });
                 }}
                 required
               />
               <br />
-              <label>終了時間：{selectedDates.end ? selectedDates.end.toISOString('ja-JP', { dateStyle: 'medium', timeStyle: 'medium' }).slice(0, 16) : ''}</label>
+              <label>終了時間：{selectedDates.end ? selectedDates.end.toLocaleString('ja-JP') : ''}</label>
               <input
                 type="datetime-local"
-                value={selectedDates.end ? selectedDates.end.toISOString('ja-JP').slice(0, 16) : ''}
+                value={formatToLocalDateTimeString(selectedDates.end)}
                 onChange={(e) => {
                   const newDate = new Date(e.target.value);
-                  const adjustedTime = new Date(newDate.getTime() - (newDate.getTimezoneOffset() * 60000));
-                  setSelectedDates({ ...selectedDates, end: adjustedTime });
+                  setSelectedDates({ ...selectedDates, end: newDate });
                 }}
                 required
               />
@@ -743,7 +792,7 @@ const MyCalendar = () => {
             <label>開始時間：{selectedEvent?.start ? selectedEvent.start.toLocaleString('ja-JP') : ""}</label>
             <input
               type="datetime-local"
-              value={selectedEvent?.start ? selectedEvent.start.toISOString().slice(0, 16) : ''}
+              value={formatToLocalDateTimeString(selectedEvent?.start)}
               onChange={(e) => {
                 console.log('New start time input value:', e.target.value);
                 const newStart = new Date(e.target.value);
@@ -761,7 +810,7 @@ const MyCalendar = () => {
             <label>終了時間：{selectedEvent?.end ? selectedEvent.end.toLocaleString('ja-JP') : ""}</label>
             <input
               type="datetime-local"
-              value={selectedEvent?.end ? selectedEvent.end.toISOString().slice(0, 16) : ''}
+              value={formatToLocalDateTimeString(selectedEvent?.end)}
               onChange={(e) => {
                 console.log('New end time input value:', e.target.value);
                 const newEnd = new Date(e.target.value);
@@ -864,9 +913,9 @@ const MyCalendar = () => {
       )}
 
       <div style={{ position: 'fixed', right: 12, top: 12, zIndex: 1000 }}>
-        <button 
-          onClick={() => setShowSettings(true)} 
-          style={{ 
+        <button
+          onClick={() => setShowSettings(true)}
+          style={{
             padding: '12px',
             backgroundColor: '#007bff',
             color: 'white',
@@ -891,16 +940,16 @@ const MyCalendar = () => {
       </div>
 
       {showSettings && (
-        <div 
+        <div
           style={{
-            position: 'fixed', 
-            left: 0, 
-            top: 0, 
-            right: 0, 
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            right: 0,
             bottom: 0,
-            background: 'rgba(0,0,0,0.5)', 
-            display: 'flex', 
-            alignItems: 'center', 
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
             backdropFilter: 'blur(2px)'
@@ -912,11 +961,11 @@ const MyCalendar = () => {
             }
           }}
         >
-          <div style={{ 
-            width: 520, 
-            background: '#fff', 
-            padding: 20, 
-            borderRadius: 8, 
+          <div style={{
+            width: 520,
+            background: '#fff',
+            padding: 20,
+            borderRadius: 8,
             zIndex: 10000,
             boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
             maxHeight: '90vh',
