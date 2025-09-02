@@ -281,6 +281,10 @@ const MyCalendar = () => {
         uketsuke: selectedEvent.uketsuke || '',
         comment: selectedEvent.comment || ''
       };
+      
+      console.log('Updating event with data:', updateData);
+      console.log('selectedEvent.start:', selectedEvent.start);
+      console.log('selectedEvent.end:', selectedEvent.end);
 
       // Make API call to update the event
       const response = await fetch(`/api/event?id=${selectedEvent.id}`, {
@@ -292,8 +296,32 @@ const MyCalendar = () => {
       });
 
       if (response.ok) {
-        // Update local state only after successful API call
-        setEvents(prev => prev.map(ev => ev.id === selectedEvent.id ? selectedEvent : ev));
+        // Refresh events from database to ensure we have the latest data
+        try {
+          const refreshResponse = await fetch('/api/event');
+          if (refreshResponse.ok) {
+            const updatedEvents = await refreshResponse.json();
+            if (Array.isArray(updatedEvents)) {
+              const mapped = updatedEvents.map(ev => ({
+                id: ev.id,
+                title: ev.eventName,
+                start: ev.startTime ? new Date(ev.startTime) : (ev.date ? new Date(ev.date) : new Date()),
+                end: ev.endTime ? new Date(ev.endTime) : new Date(),
+                doushi: ev.doushi || '',
+                onkyo: ev.onkyo || '',
+                shikai: ev.shikai || '',
+                uketsuke: ev.uketsuke || '',
+                comment: ev.comment || ''
+              }));
+              setEvents(mapped);
+            }
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh events:', refreshError);
+          // Fallback to local state update
+          setEvents(prev => prev.map(ev => ev.id === selectedEvent.id ? selectedEvent : ev));
+        }
+        
         setIsPopupVisible(false);
         console.log('Event updated successfully');
       } else {
@@ -713,31 +741,41 @@ const MyCalendar = () => {
             </select>
             <br />
             <label>開始時間：{selectedEvent?.start ? selectedEvent.start.toLocaleString('ja-JP') : ""}</label>
-            {/* <label>開始時間：{selectedEvent?.start?.toString('ja-JP') ?? ""}</label> */}
             <input
               type="datetime-local"
-              // value={start}
+              value={selectedEvent?.start ? selectedEvent.start.toISOString().slice(0, 16) : ''}
               onChange={(e) => {
-                console.log('New start time:', e.target.value);
-                setStart(e.target.value);
+                console.log('New start time input value:', e.target.value);
+                const newStart = new Date(e.target.value);
+                console.log('Parsed new start time:', newStart);
+                setSelectedEvent(prev => {
+                  const updated = { ...prev, start: newStart };
+                  console.log('Updated selectedEvent:', updated);
+                  return updated;
+                });
                 setIsStartModified(true);
               }}
               required
             />
             <br /> {/* 改行を挿入 */}
             <label>終了時間：{selectedEvent?.end ? selectedEvent.end.toLocaleString('ja-JP') : ""}</label>
-            {/* <label>終了時間：{selectedEvent?.end?.toString() ?? ""}</label> */}
             <input
               type="datetime-local"
-              // value={end}
+              value={selectedEvent?.end ? selectedEvent.end.toISOString().slice(0, 16) : ''}
               onChange={(e) => {
-                setEnd(e.target.value)
+                console.log('New end time input value:', e.target.value);
+                const newEnd = new Date(e.target.value);
+                console.log('Parsed new end time:', newEnd);
+                setSelectedEvent(prev => {
+                  const updated = { ...prev, end: newEnd };
+                  console.log('Updated selectedEvent:', updated);
+                  return updated;
+                });
                 setIsEndModified(true);
               }}
               required
             />
             <br />
-            <label>導師：</label>
             <label>導師：{selectedEvent.doushi || ''}</label>
             <select
               value={selectedEvent.doushi || ''}
