@@ -5,8 +5,8 @@ import prisma from '../../../lib/prisma'
 
 const LINE_API_PUSH_URL = 'https://api.line.me/v2/bot/message/push'
 
-// Map of role/person name to LINE user ID.
-// Prefer managing this via env as JSON: LINE_USER_ID_MAP_JSON='{"支部長":"Uxxxxxxxx"}'
+// This function is no longer needed as we will fetch from the database.
+/*
 function getLineUserIdMap() {
   try {
     if (process.env.LINE_USER_ID_MAP_JSON) {
@@ -21,6 +21,7 @@ function getLineUserIdMap() {
     "支部長": "U2ae6a5bc435866bd08148d3d7df3d2e8"
   }
 }
+*/
 
 async function sendLineMessage(userId, message) {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN
@@ -94,7 +95,31 @@ export default async function handler(req, res) {
       }
     })
 
-    const lineUserIdMap = getLineUserIdMap()
+    // Fetch all staff members (doushi, onkyo, shikai) who have a LINE ID from the database.
+    const staffWithLineIds = await prisma.settingsItem.findMany({
+      where: {
+        lineId: {
+          not: null, // Ensure lineId is not null
+          not: ""      // Ensure lineId is not an empty string
+        },
+        type: {
+          in: ['doushi', 'onkyo', 'shikai']
+        }
+      },
+      select: {
+        name: true,
+        lineId: true
+      }
+    });
+
+    // Create a map of { name: lineId } from the database results.
+    const lineUserIdMap = staffWithLineIds.reduce((acc, item) => {
+      if (item.name && item.lineId) {
+        acc[item.name] = item.lineId;
+      }
+      return acc;
+    }, {});
+
     let pushCount = 0
 
     for (const e of events) {
