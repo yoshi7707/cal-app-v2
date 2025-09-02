@@ -24,7 +24,7 @@ model Event {
   shikai        String?
   uketsuke      String?
   comment       String?
-  googleEventId String?  // Track Google Calendar event ID
+  googleEventId String? // Track Google Calendar event ID
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -33,8 +33,9 @@ model SettingsItem {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   type      String
   name      String
+  lineId    String?
   createdAt DateTime @default(now())
 
+  @@unique([type, name])
   @@map("settings_items")
-  @@index([type])
 }
