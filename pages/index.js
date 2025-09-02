@@ -99,6 +99,7 @@ const MyCalendar = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [newItemType, setNewItemType] = useState('doushi');
   const [newItemName, setNewItemName] = useState('');
+  const [newItemLineId, setNewItemLineId] = useState('');
   const [isSavingItem, setIsSavingItem] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
 
@@ -192,15 +193,22 @@ const MyCalendar = () => {
     setIsSavingItem(true);
     setStatusMsg('');
     try {
+      const body = {
+        type: newItemType,
+        name: newItemName.trim(),
+        lineId: newItemType !== 'event' ? newItemLineId.trim() : undefined,
+      };
+
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: newItemType, name: newItemName.trim() })
+        body: JSON.stringify(body)
       });
       const json = await res.json();
       if (json.ok) {
         setStatusMsg('Saved');
         setNewItemName('');
+        setNewItemLineId('');
         await refreshSettings();
       } else {
         setStatusMsg(json.error || json.message || 'Failed');
@@ -537,8 +545,8 @@ const MyCalendar = () => {
               >
                 <option value="">導師選択</option>
                 {data.doushis.map((doushi, index) => (
-                  <option key={index} value={doushi}>
-                    {doushi}
+                  <option key={index} value={doushi.name}>
+                    {doushi.name}
                   </option>
                 ))}
               </select>
@@ -549,8 +557,8 @@ const MyCalendar = () => {
               >
                 <option value="">音響選択</option>
                 {data.onkyos.map((onkyo, index) => (
-                  <option key={index} value={onkyo}>
-                    {onkyo}
+                  <option key={index} value={onkyo.name}>
+                    {onkyo.name}
                   </option>
                 ))}
               </select>
@@ -561,8 +569,8 @@ const MyCalendar = () => {
               >
                 <option value="">司会選択</option>
                 {data.shikais.map((shikai, index) => (
-                  <option key={index} value={shikai}>
-                    {shikai}
+                  <option key={index} value={shikai.name}>
+                    {shikai.name}
                   </option>
                 ))}
               </select>
@@ -833,8 +841,8 @@ const MyCalendar = () => {
             >
               <option value="">導師選択</option>
               {data.doushis.map((doushi, index) => (
-                <option key={index} value={doushi}>
-                  {doushi}
+                <option key={index} value={doushi.name}>
+                  {doushi.name}
                 </option>
               ))}
             </select>
@@ -853,8 +861,8 @@ const MyCalendar = () => {
             >
               <option value="">音響選択</option>
               {data.onkyos.map((onkyo, index) => (
-                <option key={index} value={onkyo}>
-                  {onkyo}
+                <option key={index} value={onkyo.name}>
+                  {onkyo.name}
                 </option>
               ))}
             </select>
@@ -867,8 +875,8 @@ const MyCalendar = () => {
             >
               <option value="">司会選択</option>
               {data.shikais.map((shikai, index) => (
-                <option key={index} value={shikai}>
-                  {shikai}
+                <option key={index} value={shikai.name}>
+                  {shikai.name}
                 </option>
               ))}
             </select>
@@ -986,6 +994,12 @@ const MyCalendar = () => {
                 <label>Name: </label>
                 <input value={newItemName} onChange={e => setNewItemName(e.target.value)} />
               </div>
+              {newItemType !== 'event' && (
+                <div style={{ marginBottom: 8 }}>
+                  <label>LINE ID: </label>
+                  <input value={newItemLineId} onChange={e => setNewItemLineId(e.target.value)} placeholder="(Optional)" />
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="submit" disabled={isSavingItem}>Add</button>
                 <button type="button" onClick={() => { setShowSettings(false); setStatusMsg(''); }}>Close</button>
@@ -1000,22 +1014,22 @@ const MyCalendar = () => {
 
             <div>
               <h4>Current lists</h4>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <div>
                   <div><strong>doushi</strong></div>
-                  <ul>{doushis.map(d => <li key={d}>{d}</li>)}</ul>
+                  <ul>{doushis.map(d => <li key={d.name}>{d.name} {d.lineId && `(${d.lineId})`}</li>)}</ul>
                 </div>
                 <div>
                   <div><strong>onkyo</strong></div>
-                  <ul>{onkyos.map(d => <li key={d}>{d}</li>)}</ul>
+                  <ul>{onkyos.map(o => <li key={o.name}>{o.name} {o.lineId && `(${o.lineId})`}</li>)}</ul>
                 </div>
                 <div>
                   <div><strong>shikai</strong></div>
-                  <ul>{shikais.map(d => <li key={d}>{d}</li>)}</ul>
+                  <ul>{shikais.map(s => <li key={s.name}>{s.name} {s.lineId && `(${s.lineId})`}</li>)}</ul>
                 </div>
                 <div>
                   <div><strong>preset events</strong></div>
-                  <ul>{presetEvents.map(d => <li key={d}>{d}</li>)}</ul>
+                  <ul>{presetEvents.map(e => <li key={e}>{e}</li>)}</ul>
                 </div>
               </div>
             </div>
