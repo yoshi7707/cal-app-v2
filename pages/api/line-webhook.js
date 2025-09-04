@@ -452,13 +452,13 @@ export default async function handler(req, res) {
 コメント: ${state.data.comment || 'なし'}
         `.trim();
 
-        await replyToUser(replyToken, `${summary}\n\nこれで登録していいですか？\n「はい」か「いいえ」で答えてください。`);
+        await replyToUser(replyToken, `${summary}\n\nこれで登録していいですか？\n1) はい\n2) いいえ`);
         continue;
 
       } else if (state.step === 'awaiting_confirmation') {
-        const confirmation = userText.toLowerCase();
+        const confirmation = userText.trim();
 
-        if (confirmation === 'はい' || confirmation === 'yes') {
+        if (confirmation === '1') {
           try {
             const newEvent = await prisma.event.create({
               data: {
@@ -495,11 +495,11 @@ export default async function handler(req, res) {
           } finally {
             delete conversationState[userId];
           }
-        } else if (confirmation === 'いいえ' || confirmation === 'no') {
+        } else if (confirmation === '2') {
           delete conversationState[userId];
           await replyToUser(replyToken, '行事作成をキャンセルしました。最初からやり直すには「新規行事」と入力してください。');
         } else {
-          await replyToUser(replyToken, '「はい」か「いいえ」で答えてください。');
+          await replyToUser(replyToken, '1か2で答えてください。');
         }
         continue;
       }
