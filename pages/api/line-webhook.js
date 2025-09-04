@@ -91,7 +91,7 @@ function formatDateTimeLabel(item) {
   // item: { date, startTime, endTime } where startTime/endTime are ISO strings
   try {
     const date = item.date || (item.startTime ? item.startTime.split('T')[0] : '');
-    
+
     // Helper to format an ISO string into HH:mm in JST
     const fmtHM_JST = (isoString) => {
       if (!isoString) return '';
@@ -106,7 +106,7 @@ function formatDateTimeLabel(item) {
 
     const start = fmtHM_JST(item.startTime);
     const end = fmtHM_JST(item.endTime);
-    
+
     return `${date} ${start || ''}${end ? '-' + end : ''}`.trim();
   } catch (e) {
     console.error("Error formatting date time label:", e);
@@ -433,43 +433,73 @@ export default async function handler(req, res) {
         } else {
           state.data.comment = userText;
         }
+
+        // --- NEW: Move to confirmation step ---
+        state.step = 'awaiting_confirmation';
         conversationState[userId] = state;
 
-        try {
-          const newEvent = await prisma.event.create({
-            data: {
-              eventName: state.data.eventName,
-              date: state.data.date,
-              startTime: state.data.startTime,
-              endTime: state.data.endTime,
-              doushi: state.data.doushi || 'N/A',
-              onkyo: state.data.onkyo || 'N/A',
-              shikai: state.data.shikai || 'N/A',
-              comment: state.data.comment || '',
-            }
-          });
+        // Format the summary message
+        const timePart = formatDateTimeLabel({ startTime: state.data.startTime, endTime: state.data.endTime }).split(' ')[1] || '';
+        const summary = `
+以下の内容で登録します。
 
-          const googleEventData = {
-            title: newEvent.eventName,
-            description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n司会: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
-            start: newEvent.startTime,
-            end: newEvent.endTime,
-            allDay: false,
-          };
-          const googleEvent = await createGoogleCalendarEvent(googleEventData);
+行事名: ${state.data.eventName}
+日付: ${state.data.date}
+時間: ${timePart}
+導師: ${state.data.doushi || 'N/A'}
+音響: ${state.data.onkyo || 'N/A'}
+司会: ${state.data.shikai || 'N/A'}
+コメント: ${state.data.comment || 'なし'}
+        `.trim();
 
-          await prisma.event.update({
-            where: { id: newEvent.id },
-            data: { googleEventId: googleEvent.id },
-          });
+        await replyToUser(replyToken, `${summary}\n\nこれで登録していいですか？\n「はい」か「いいえ」で答えてください。`);
+        continue;
 
-          await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成され、Googleカレンダーに同期されました😃`);
+      } else if (state.step === 'awaiting_confirmation') {
+        const confirmation = userText.toLowerCase();
 
-        } catch (error) {
-          console.error('Failed to create event:', error);
-          await replyToUser(replyToken, `申し訳ございません。行事の作成中にエラーが発生しました：${error.message}`);
-        } finally {
+        if (confirmation === 'はい' || confirmation === 'yes') {
+          try {
+            const newEvent = await prisma.event.create({
+              data: {
+                eventName: state.data.eventName,
+                date: state.data.date,
+                startTime: state.data.startTime,
+                endTime: state.data.endTime,
+                doushi: state.data.doushi || 'N/A',
+                onkyo: state.data.onkyo || 'N/A',
+                shikai: state.data.shikai || 'N/A',
+                comment: state.data.comment || '',
+              }
+            });
+
+            const googleEventData = {
+              title: newEvent.eventName,
+              description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n司会: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
+              start: newEvent.startTime,
+              end: newEvent.endTime,
+              allDay: false,
+            };
+            const googleEvent = await createGoogleCalendarEvent(googleEventData);
+
+            await prisma.event.update({
+              where: { id: newEvent.id },
+              data: { googleEventId: googleEvent.id },
+            });
+
+            await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成されました😃`);
+
+          } catch (error) {
+            console.error('Failed to create event:', error);
+            await replyToUser(replyToken, `申し訳ございません。行事の作成中にエラーが発生しました：${error.message}`);
+          } finally {
+            delete conversationState[userId];
+          }
+        } else if (confirmation === 'いいえ' || confirmation === 'no') {
           delete conversationState[userId];
+          await replyToUser(replyToken, '行事作成をキャンセルしました。最初からやり直すには「新規行事」と入力してください。');
+        } else {
+          await replyToUser(replyToken, '「はい」か「いいえ」で答えてください。');
         }
         continue;
       }
