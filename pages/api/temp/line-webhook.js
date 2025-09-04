@@ -49,39 +49,49 @@ async function replyToUser(replyToken, messageText) {
   });
 }
 
-/**
- * Fetches a user's profile from the LINE API.
- * @param {string} userId The user's LINE ID.
- * @returns {Promise<object|null>} The user's profile object or null on failure.
- */
-async function getUserProfile(userId) {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  if (!token || !userId) {
-    console.error('Missing LINE token or userId for profile fetch.');
-    return null;
+function parseDate(dateString) {
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  dateString = dateString.toLowerCase();
+
+  if (dateString === 'today' || dateString === '今日') {
+    return today;
+  }
+  if (dateString === 'tomorrow' || dateString === '明日') {
+    return tomorrow;
   }
 
-  try {
-    const response = await fetch(`https://api.line.me/v2/bot/profile/${userId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+  const weekdays = {
+    'sunday': 0, '日曜日': 0,
+    'monday': 1, '月曜日': 1,
+    'tuesday': 2, '火曜日': 2,
+    'wednesday': 3, '水曜日': 3,
+    'thursday': 4, '木曜日': 4,
+    'friday': 5, '金曜日': 5,
+    'saturday': 6, '土曜日': 6,
+  };
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error(`Failed to fetch LINE profile for ${userId}:`, response.status, errorBody);
-      return null;
+  for (const day in weekdays) {
+    if (dateString.includes(day)) {
+      let targetDay = weekdays[day];
+      let resultDate = new Date();
+      resultDate.setDate(today.getDate() + (targetDay - today.getDay() + 7) % 7);
+      if (dateString.startsWith('next') || dateString.startsWith('来週')) {
+        resultDate.setDate(resultDate.getDate() + 7);
+      }
+      return resultDate;
     }
-
-    return await response.json(); // Returns { displayName, userId, pictureUrl, statusMessage }
-  } catch (error) {
-    console.error('Error calling LINE profile API:', error);
-    return null;
   }
-}
 
+  const parsedDate = new Date(dateString);
+  if (!isNaN(parsedDate.getTime())) {
+    return parsedDate;
+  }
+
+  return null;
+}
 
 function uniqueArray(arr) {
   return [...new Set(arr)];
@@ -91,7 +101,7 @@ function formatDateTimeLabel(item) {
   // item: { date, startTime, endTime } where startTime/endTime are ISO strings
   try {
     const date = item.date || (item.startTime ? item.startTime.split('T')[0] : '');
-    
+
     // Helper to format an ISO string into HH:mm in JST
     const fmtHM_JST = (isoString) => {
       if (!isoString) return '';
@@ -106,7 +116,7 @@ function formatDateTimeLabel(item) {
 
     const start = fmtHM_JST(item.startTime);
     const end = fmtHM_JST(item.endTime);
-    
+
     return `${date} ${start || ''}${end ? '-' + end : ''}`.trim();
   } catch (e) {
     console.error("Error formatting date time label:", e);
@@ -139,53 +149,6 @@ export default async function handler(req, res) {
       const userText = event.message.text.trim();
       const replyToken = event.replyToken;
 
-      // --- AUTOMATED REGISTRATION LOGIC ---
-      const registrationCommand = userText.match(/^(ID登録|id登録)\s+(.+)$/);
-      if (registrationCommand) {
-        const roleInput = registrationCommand[2].trim();
-        const roleMapping = {
-          '導師': 'doushi',
-          'doushi': 'doushi',
-          '音響': 'onkyo',
-          'onkyo': 'onkyo',
-          '司会': 'shikai',
-          'shikai': 'shikai',
-        };
-
-        const role = roleMapping[roleInput.toLowerCase()];
-
-        if (!role) {
-          await replyToUser(replyToken, `役割名が無効です。「導師」「音響」「司会」のいずれかを指定してください。\n例： ID登録 導師`);
-          continue;
-        }
-
-        const userProfile = await getUserProfile(userId);
-
-        if (!userProfile) {
-          await replyToUser(replyToken, 'プロフィールの取得に失敗しました。ボットをブロックしていないか確認してください。');
-          continue;
-        }
-
-        const { displayName } = userProfile;
-
-        try {
-          await prisma.settingsItem.upsert({
-            where: {
-              type_name: { type: role, name: displayName }
-            },
-            update: { lineId: userId },
-            create: { type: role, name: displayName, lineId: userId },
-          });
-
-          await replyToUser(replyToken, `登録が完了しました。\n名前： ${displayName}\n役割： ${roleInput}`);
-        } catch (dbError) {
-          console.error('DB error during registration:', dbError);
-          await replyToUser(replyToken, 'データベースへの登録中にエラーが発生しました。');
-        }
-        continue;
-      }
-      // --- END OF REGISTRATION LOGIC ---
-
       let state = conversationState[userId] || { step: 'idle' };
 
       if (userText.toLowerCase() === 'cancel' || userText === 'キャンセル') {
@@ -196,11 +159,13 @@ export default async function handler(req, res) {
 
       // Start: show selections from settings data
       if (state.step === 'idle' && (userText.toLowerCase() === 'new event' || userText === '新規行事')) {
+        // Fetch settings items from DB
         try {
           const settingsItems = await prisma.settingsItem.findMany({
             orderBy: { createdAt: 'desc' },
           });
 
+          // Group settings by type
           const groupedSettings = settingsItems.reduce((acc, item) => {
             acc[item.type] = acc[item.type] || [];
             acc[item.type].push(item.name);
@@ -213,12 +178,14 @@ export default async function handler(req, res) {
           const shikais = groupedSettings.shikai || [];
 
           if (eventNames.length === 0) {
+            // Fallback to original free-form flow if no preset events
             state = { step: 'awaiting_name', data: {} };
             conversationState[userId] = state;
             await replyToUser(replyToken, 'プリセット行事が見つかりません。行事名を入力してください。');
             continue;
           }
 
+          // Save settings for later use
           state = {
             step: 'select_name',
             data: {},
@@ -257,6 +224,7 @@ export default async function handler(req, res) {
           const chosenName = state.options.names[idx];
           state.data.eventName = chosenName;
 
+          // Build date-only list from today -> one month ahead (so reply is compact)
           const startDate = new Date();
           startDate.setHours(0, 0, 0, 0);
           const endDate = new Date(startDate);
@@ -270,8 +238,10 @@ export default async function handler(req, res) {
             dateOptions.push(`${yyyy}-${mm}-${dd}`);
           }
 
+          // keep template for time slots (09:00 - 20:00, 30-min)
           state.options.dateOptions = dateOptions;
           state.options.timeTemplate = { startHour: 9, endHour: 20, stepMinutes: 30 };
+          // stage: user first selects a date, then a timeslot
           state.meta = state.meta || {};
           state.meta.datetimeStage = 'date';
           state.step = 'select_datetime';
@@ -290,19 +260,22 @@ export default async function handler(req, res) {
       if (state.step === 'select_datetime') {
         const lower = userText.toLowerCase();
         if (lower === 'custom' || lower === 'カスタム') {
+          // start structured date selection: year -> month -> day
           state.step = 'select_year';
+          // set baseDate = one month ahead so UI shows options starting from next month
           const base = new Date();
           base.setMonth(base.getMonth() + 1);
           state.meta = state.meta || {};
           state.meta.baseDate = {
             year: base.getFullYear(),
-            month: base.getMonth() + 1,
+            month: base.getMonth() + 1, // 1-based
             day: base.getDate(),
           };
           conversationState[userId] = state;
           await replyToUser(replyToken, `年を選択してください：\n1) ${state.meta.baseDate.year}\n2) ${state.meta.baseDate.year + 1}\n番号で返信してください。`);
           continue;
         }
+        // Two-stage within select_datetime: first date selection, then time selection
         const num = parseInt(userText, 10);
         if (!Number.isInteger(num)) {
           await replyToUser(replyToken, '日付または時刻の番号で返信するか、「カスタム」と入力してください。');
@@ -312,10 +285,11 @@ export default async function handler(req, res) {
         if (state.meta && state.meta.datetimeStage === 'date') {
           const dateIdx = num - 1;
           if (!state.options || !state.options.dateOptions || dateIdx < 0 || dateIdx >= state.options.dateOptions.length) {
-            await replyToUser(replyToken, `Invalid selection. Reply with a number between 1 and ${state.options.dateOptions.length}.`);
+            await replyToUser(replyToken, `Invalid selection. Reply with a number between 1 and ${state.options && state.options.dateOptions ? state.options.dateOptions.length : 31}.`);
             continue;
           }
           const chosenDate = state.options.dateOptions[dateIdx];
+          // build timeslots for that single date
           const tpl = state.options.timeTemplate || { startHour: 9, endHour: 20, stepMinutes: 30 };
           const slots = [];
           for (let minutes = tpl.startHour * 60; minutes < tpl.endHour * 60; minutes += tpl.stepMinutes) {
@@ -324,9 +298,11 @@ export default async function handler(req, res) {
             const eh = Math.floor((minutes + tpl.stepMinutes) / 60);
             const em = (minutes + tpl.stepMinutes) % 60;
 
+            // Construct date strings in JST by appending the timezone offset
             const startTimeStrJST = `${chosenDate}T${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}:00+09:00`;
             const endTimeStrJST = `${chosenDate}T${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}:00+09:00`;
 
+            // Create Date objects from the JST strings and then convert to ISO strings (which are always UTC)
             const startISO = new Date(startTimeStrJST).toISOString();
             const endISO = new Date(endTimeStrJST).toISOString();
 
@@ -341,17 +317,20 @@ export default async function handler(req, res) {
           continue;
         }
 
+        // stage === 'time' => pick timeslot index
         const timeIdx = num - 1;
         if (!state.options || !state.options.timeSlots || timeIdx < 0 || timeIdx >= state.options.timeSlots.length) {
-          await replyToUser(replyToken, `無効な選択です。1から${state.options.timeSlots.length}までの番号で返信してください。`);
+          await replyToUser(replyToken, `無効な選択です。1から${state.options && state.options.timeSlots ? state.options.timeSlots.length : 22}までの番号で返信してください。`);
           continue;
         }
         const chosen = state.options.timeSlots[timeIdx];
         state.data.date = chosen.date;
         state.data.startTime = chosen.startTime;
         state.data.endTime = chosen.endTime;
+        // proceed to role selection
         state.step = 'select_role';
         state.meta = { rolesOrder: ['doushi', 'onkyo', 'shikai'], roleIndex: 0 };
+        // prepare role options from settings
         const roleOptions = {
           doushi: state.options.doushis || [],
           onkyo: state.options.onkyos || [],
@@ -362,13 +341,17 @@ export default async function handler(req, res) {
 
         const currentRole = state.meta.rolesOrder[state.meta.roleIndex];
         const opts = (state.options.roles[currentRole] || []);
+        // Add "1) なし" as the first option. The rest of the names start from 2.
         const list = `1) なし\n` + (opts.length ? opts.map((o, i) => `${i + 2}) ${o}`).join('\n') : '(プリセット名なし)');
+
+        // Map role names to Japanese
         const roleNames = {
           'doushi': '導師',
           'onkyo': '音響',
           'shikai': '司会'
         };
         const roleName = roleNames[currentRole] || currentRole;
+
         await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
         continue;
       }
@@ -380,41 +363,52 @@ export default async function handler(req, res) {
         const currentRole = rolesOrder[idx];
 
         const num = parseInt(userText, 10);
+        // Check if the user input is a number
         if (Number.isInteger(num)) {
           if (num === 1) {
+            // User selected "1) なし"
             state.data[currentRole] = 'N/A';
           } else {
+            // User selected a name from the list (which starts at index 2)
             const opts = state.options.roles[currentRole] || [];
-            const selectedName = opts[num - 2];
+            const selectedName = opts[num - 2]; // Adjust index
             if (selectedName) {
               state.data[currentRole] = selectedName;
             } else {
+              // The number was out of range
               await replyToUser(replyToken, `無効な番号です。リストから選択してください。`);
-              continue;
+              continue; // Stay in the same step
             }
           }
         } else {
+          // If not a number, treat it as a directly typed name
           state.data[currentRole] = userText;
         }
 
         idx += 1;
         if (idx >= rolesOrder.length) {
+          // done with roles, ask comment
           state.step = 'awaiting_comment';
           conversationState[userId] = state;
           await replyToUser(replyToken, '役割が設定されました。コメントはありますか？\n1) なし\nコメント内容を直接入力することもできます。');
           continue;
         } else {
+          // ask next role
           state.meta.roleIndex = idx;
           conversationState[userId] = state;
           const nextRole = rolesOrder[idx];
           const nextOpts = (state.options.roles[nextRole] || []);
+          // Add "1) なし" as the first option for the next role as well.
           const list = `1) なし\n` + (nextOpts.length ? nextOpts.map((o, i) => `${i + 2}) ${o}`).join('\n') : '(プリセット名なし)');
+
+          // Map role names to Japanese
           const roleNames = {
             'doushi': '導師',
             'onkyo': '音響',
             'shikai': '司会'
           };
           const roleName = roleNames[nextRole] || nextRole;
+
           await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
           continue;
         }
@@ -423,11 +417,35 @@ export default async function handler(req, res) {
       // Fallback: original free-form flows for name/date if user chose custom or DB empty
       if (state.step === 'awaiting_name') {
         state.data.eventName = userText;
+        // switch to structured date selection
         state.step = 'select_year';
         conversationState[userId] = state;
         await replyToUser(replyToken, `了解しました。"${userText}"の年を選択してください：\n1) 2025\n2) 2026\n番号で返信してください。`);
         continue;
+      } else if (state.step === 'awaiting_date') {
+        // legacy branch preserved but not used; keep for safety
+        await replyToUser(replyToken, '提供された選択フローを使用してください（年→月→日の順で選択）。');
+        continue;
+      } else if (state.step === 'awaiting_roles') {
+        // legacy path — keep for compatibility but prefer select_role flow
+        const roles = userText.split(',').map(p => p.trim());
+        state.data.doushi = 'N/A';
+        state.data.onkyo = 'N/A';
+        state.data.shikai = 'N/A';
+        roles.forEach(role => {
+          const [roleName, personName] = role.split(':').map(s => s.trim());
+          if (roleName && personName) {
+            if (roleName.toLowerCase() === 'doushi' || roleName === '導師') state.data.doushi = personName;
+            if (roleName.toLowerCase() === 'onkyo' || roleName === '音響') state.data.onkyo = personName;
+            if (roleName.toLowerCase() === 'shikai' || roleName === '司会') state.data.shikai = personName;
+          }
+        });
+        state.step = 'awaiting_comment';
+        conversationState[userId] = state;
+        await replyToUser(replyToken, '役割が割り当てられました。コメントはありますか？（コメントがない場合は「なし」と入力してください）');
+        continue;
       } else if (state.step === 'awaiting_comment') {
+        // Handle "1" or "なし" for no comment, otherwise use the text.
         if (userText === '1' || userText.toLowerCase() === 'none' || userText === 'なし') {
           state.data.comment = '';
         } else {
@@ -463,7 +481,7 @@ export default async function handler(req, res) {
             data: { googleEventId: googleEvent.id },
           });
 
-          await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成され、Googleカレンダーに同期されました😃`);
+          await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成されました😃`);
 
         } catch (error) {
           console.error('Failed to create event:', error);
