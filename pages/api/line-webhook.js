@@ -148,14 +148,14 @@ export default async function handler(req, res) {
           'doushi': 'doushi',
           '音響': 'onkyo',
           'onkyo': 'onkyo',
-          '司会': 'shikai',
+          '常駐': 'shikai',
           'shikai': 'shikai',
         };
 
         const role = roleMapping[roleInput.toLowerCase()];
 
         if (!role) {
-          await replyToUser(replyToken, `役割名が無効です。「導師」「音響」「司会」のいずれかを指定してください。\n例： ID登録 導師`);
+          await replyToUser(replyToken, `役割名が無効です。「導師」「音響」「常駐」のいずれかを指定してください。\n例： ID登録 導師`);
           continue;
         }
 
@@ -410,7 +410,7 @@ export default async function handler(req, res) {
         const roleNames = {
           'doushi': '導師',
           'onkyo': '音響',
-          'shikai': '司会'
+          'shikai': '常駐'
         };
         const roleName = roleNames[currentRole] || currentRole;
         await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
@@ -456,7 +456,7 @@ export default async function handler(req, res) {
           const roleNames = {
             'doushi': '導師',
             'onkyo': '音響',
-            'shikai': '司会'
+            'shikai': '常駐'
           };
           const roleName = roleNames[nextRole] || nextRole;
           await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
@@ -492,7 +492,7 @@ export default async function handler(req, res) {
 時間: ${timePart}
 導師: ${state.data.doushi || 'N/A'}
 音響: ${state.data.onkyo || 'N/A'}
-司会: ${state.data.shikai || 'N/A'}
+常駐: ${state.data.shikai || 'N/A'}
 コメント: ${state.data.comment || 'なし'}
         `.trim();
 
@@ -519,7 +519,7 @@ export default async function handler(req, res) {
 
             const googleEventData = {
               title: newEvent.eventName,
-              description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n司会: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
+              description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n常駐: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
               start: newEvent.startTime,
               end: newEvent.endTime,
               allDay: false,
