@@ -316,40 +316,84 @@ export default async function handler(req, res) {
             continue;
           }
           const chosenDate = state.options.dateOptions[dateIdx];
-          const tpl = state.options.timeTemplate || { startHour: 9, endHour: 20, stepMinutes: 30 };
-          const slots = [];
+          state.data.date = chosenDate; // Store the chosen date
+
+          // --- MODIFICATION: Generate start times only ---
+          const tpl = state.options.timeTemplate || { startHour: 8, endHour: 22, stepMinutes: 30 };
+          const startTimes = [];
           for (let minutes = tpl.startHour * 60; minutes < tpl.endHour * 60; minutes += tpl.stepMinutes) {
-            const sh = Math.floor(minutes / 60);
-            const sm = minutes % 60;
-            const eh = Math.floor((minutes + tpl.stepMinutes) / 60);
-            const em = (minutes + tpl.stepMinutes) % 60;
-
-            const startTimeStrJST = `${chosenDate}T${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}:00+09:00`;
-            const endTimeStrJST = `${chosenDate}T${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}:00+09:00`;
-
-            const startISO = new Date(startTimeStrJST).toISOString();
-            const endISO = new Date(endTimeStrJST).toISOString();
-
-            slots.push({ date: chosenDate, startTime: startISO, endTime: endISO });
+            const h = Math.floor(minutes / 60);
+            const m = minutes % 60;
+            const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            startTimes.push(timeStr);
           }
-          state.options.timeSlots = slots;
-          state.meta.datetimeStage = 'time';
-          state.step = 'select_datetime';
+
+          state.options.startTimes = startTimes;
+          state.step = 'select_start_time'; // Move to the new start time selection step
           conversationState[userId] = state;
-          const timesText = slots.map((s, i) => `${i + 1}) ${formatDateTimeLabel(s)}`).join('\n');
-          await replyToUser(replyToken, `${chosenDate}の時刻を番号で選択してください：\n${timesText}`);
+
+          const timesText = startTimes.map((t, i) => `${i + 1}) ${t}`).join('\n');
+          await replyToUser(replyToken, `${chosenDate}の開始時刻を番号で選択してください：\n${timesText}`);
           continue;
         }
 
-        const timeIdx = num - 1;
-        if (!state.options || !state.options.timeSlots || timeIdx < 0 || timeIdx >= state.options.timeSlots.length) {
-          await replyToUser(replyToken, `無効な選択です。1から${state.options.timeSlots.length}までの番号で返信してください。`);
+        // This part of the logic is now replaced by select_start_time and select_end_time
+        // The 'time' stage of 'select_datetime' is no longer used.
+        await replyToUser(replyToken, '予期しないステップです。初めからやり直してください。');
+        continue;
+      }
+
+      // --- NEW STEP: Handle start time selection ---
+      if (state.step === 'select_start_time') {
+        const num = parseInt(userText, 10);
+        if (!Number.isInteger(num) || !state.options || !state.options.startTimes || num < 1 || num > state.options.startTimes.length) {
+          await replyToUser(replyToken, `無効な選択です。1から${state.options.startTimes.length}までの番号で返信してください。`);
           continue;
         }
-        const chosen = state.options.timeSlots[timeIdx];
-        state.data.date = chosen.date;
-        state.data.startTime = chosen.startTime;
-        state.data.endTime = chosen.endTime;
+
+        const chosenTimeStr = state.options.startTimes[num - 1];
+        const [startHour, startMinute] = chosenTimeStr.split(':').map(Number);
+
+        // Create and store the full ISO string for the start time
+        const startTimeStrJST = `${state.data.date}T${chosenTimeStr}:00+09:00`;
+        state.data.startTime = new Date(startTimeStrJST).toISOString();
+
+        // Generate end time options, starting from the selected start time
+        const tpl = state.options.timeTemplate || { startHour: 8, endHour: 22, stepMinutes: 30 };
+        const endTimes = [];
+        const startTotalMinutes = startHour * 60 + startMinute;
+
+        for (let minutes = startTotalMinutes + tpl.stepMinutes; minutes <= tpl.endHour * 60; minutes += tpl.stepMinutes) {
+          const h = Math.floor(minutes / 60);
+          const m = minutes % 60;
+          const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+          endTimes.push(timeStr);
+        }
+
+        state.options.endTimes = endTimes;
+        state.step = 'select_end_time';
+        conversationState[userId] = state;
+
+        const timesText = endTimes.map((t, i) => `${i + 1}) ${t}`).join('\n');
+        await replyToUser(replyToken, `終了時刻を番号で選択してください：\n${timesText}`);
+        continue;
+      }
+
+      // --- NEW STEP: Handle end time selection ---
+      if (state.step === 'select_end_time') {
+        const num = parseInt(userText, 10);
+        if (!Number.isInteger(num) || !state.options || !state.options.endTimes || num < 1 || num > state.options.endTimes.length) {
+          await replyToUser(replyToken, `無効な選択です。1から${state.options.endTimes.length}までの番号で返信してください。`);
+          continue;
+        }
+
+        const chosenTimeStr = state.options.endTimes[num - 1];
+
+        // Create and store the full ISO string for the end time
+        const endTimeStrJST = `${state.data.date}T${chosenTimeStr}:00+09:00`;
+        state.data.endTime = new Date(endTimeStrJST).toISOString();
+
+        // --- Proceed to role selection (original flow continues here) ---
         state.step = 'select_role';
         state.meta = { rolesOrder: ['doushi', 'onkyo', 'shikai'], roleIndex: 0 };
         const roleOptions = {
