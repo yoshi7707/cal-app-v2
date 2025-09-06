@@ -8,29 +8,21 @@ const DisplayComponent = ({ events = [] }) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const twoWeeksFromNow = new Date(today);
-    twoWeeksFromNow.setDate(today.getDate() + 14);
-    twoWeeksFromNow.setHours(23, 59, 59, 999);
+    // Set the end date to 31 days from today (one month)
+    const oneMonthFromNow = new Date(today);
+    oneMonthFromNow.setDate(today.getDate() + 31);
+    oneMonthFromNow.setHours(23, 59, 59, 999);
 
-    const processedEvents = events.map(event => ({
-      ...event,
-      start: event.start instanceof Date ? event.start : new Date(event.start),
-      end: event.end instanceof Date ? event.end : new Date(event.end)
-    }));
+    // Filter events for the next 31 days
+    const filtered = events.filter(event => {
+      const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
+      return eventStart >= today && eventStart <= oneMonthFromNow;
+    });
 
-    // Filter events
-    const filtered = events.filter(event =>
-      event.start >= today && event.start <= twoWeeksFromNow
-    );
+    // Sort the filtered events by date and time
+    const sorted = filtered.sort((a, b) => a.start.getTime() - b.start.getTime());
 
-    // const filtered = processedEvents
-    //   .filter(event => {
-    //     const isValid = event.end >= today;
-    //     return isValid;
-    //   })
-    //   .sort((a, b) => a.start - b.start);
-
-    setSortedEvents(filtered);
+    setSortedEvents(sorted);
   }, [events]);
 
   const handleDisplay = () => {
@@ -45,8 +37,7 @@ const DisplayComponent = ({ events = [] }) => {
     const textToCopy = sortedEvents.map(event => (
       `行事: ${event.title}\n` +
       `日時: ${event.start.toLocaleString()}\n` +
-      `導師: ${event.doushi}\n` +
-      `音響: ${event.onkyo}\n` +
+      `常駐: ${event.onkyo}\n` +
       '------------------------'
     )).join('\n');
 
@@ -69,13 +60,13 @@ const DisplayComponent = ({ events = [] }) => {
           marginBottom: '20px',
           marginRight: '10px',
           borderRadius: '10px',
-          backgroundColor: '#3490dc',
+          backgroundColor: 'orange',
           color: 'white',
           border: 'none',
           cursor: 'pointer'
         }}
       >
-        「復活の祈り」
+        常駐
       </button>
 
       {showPopup && (
@@ -158,16 +149,16 @@ const DisplayComponent = ({ events = [] }) => {
                       color: '#2563eb',
                       marginBottom: '0.5rem'
                     }}>
-                      {event.title}
+                      常駐
                     </h4>
-                    <p style={{ color: '#4b5563', marginBottom: '0.5rem' }}>
-                      {event.start.toLocaleString()}
+                    <p style={{ color: '#374151' }}>
+                      常駐: {event.onkyo}
                     </p>
-                    <p style={{ color: '#374151', marginBottom: '0.25rem' }}>
-                      導師: {event.doushi}
+                    <p style={{ color: '#4b5563', marginBottom: '0.5rem' }}>
+                      {event.start.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
                     </p>
                     <p style={{ color: '#374151' }}>
-                      音響: {event.onkyo}
+                      {event.comment}
                     </p>
                   </div>
                 ))
@@ -177,26 +168,6 @@ const DisplayComponent = ({ events = [] }) => {
                 </p>
               )}
             </div>
-
-            {/* <div style={{ 
-              marginTop: '1.5rem',
-              textAlign: 'center'
-            }}>
-              <button 
-                onClick={handleClosePopup}
-                style={{
-                  width: '30%',
-                  height: '30px',
-                  borderRadius: '8px',
-                  backgroundColor: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                戻る
-              </button>
-            </div> */}
           </div>
         </div>
       )}

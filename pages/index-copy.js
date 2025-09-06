@@ -889,7 +889,7 @@ const MyCalendar = () => {
             if (event.title === "「復活の祈り」") {
               return {
                 style: {
-                  backgroundColor: 'red', // This sets the text color to red
+                  color: 'red', // This sets the text color to red
                 }
               };
             }
