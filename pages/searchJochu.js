@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 const DisplayComponent = ({ events = [] }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [sortedEvents, setSortedEvents] = useState([]);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     const today = new Date();
@@ -13,10 +14,20 @@ const DisplayComponent = ({ events = [] }) => {
     oneMonthFromNow.setDate(today.getDate() + 31);
     oneMonthFromNow.setHours(23, 59, 59, 999);
 
-    // Filter events for the next 31 days
+    // Filter events for the next 31 days AND only "常駐" events
     const filtered = events.filter(event => {
       const eventStart = event.start instanceof Date ? event.start : new Date(event.start);
-      return eventStart >= today && eventStart <= oneMonthFromNow;
+      const isInDateRange = eventStart >= today && eventStart <= oneMonthFromNow;
+
+      // Check if the event is a "常駐" event
+      // This checks multiple possible fields where "常駐" might be stored
+      const isJochuEvent =
+        event.onkyo === '常駐' ||
+        event.title?.includes('常駐') ||
+        event.type === '常駐' ||
+        event.category === '常駐';
+
+      return isInDateRange && isJochuEvent;
     });
 
     // Sort the filtered events by date and time
@@ -33,13 +44,30 @@ const DisplayComponent = ({ events = [] }) => {
     setShowPopup(false);
   };
 
-  const handleCopy = () => {
-    const textToCopy = sortedEvents.map(event => (
-      `行事: ${event.title}\n` +
-      `日時: ${event.start.toLocaleString()}\n` +
-      `常駐: ${event.onkyo}\n` +
-      '------------------------'
-    )).join('\n');
+
+const handleCopy = () => {
+  const formatDateTime = (date) => {
+    const month = date.getMonth() + 1; // getMonth() is 0-based
+    const day = date.getDate();
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${month}/${day}/${year}, ${hours}:${minutes}`;
+  };
+
+  const formatTimeOnly = (date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${hours}:${minutes}`;
+  };
+
+  const textToCopy = sortedEvents.map(event => (
+    `${event.shikai}さん\n` +
+    `${formatDateTime(event.start)} - ${formatTimeOnly(event.end)}\n` +
+    '------------------------'
+  )).join('\n');
 
     navigator.clipboard.writeText(textToCopy)
       .then(() => {
@@ -113,7 +141,6 @@ const DisplayComponent = ({ events = [] }) => {
               >
                 戻る
               </button>
-              {/* </div> */}
 
               <button
                 onClick={handleCopy}
@@ -130,41 +157,53 @@ const DisplayComponent = ({ events = [] }) => {
               >
                 コピー
               </button>
+
+              {copySuccess && (
+                <p style={{
+                  marginTop: '0.5rem',
+                  color: '#10B981',
+                  fontSize: '0.875rem'
+                }}>
+                  コピーしました！
+                </p>
+              )}
             </div>
 
             <div style={{ marginTop: '1.5rem' }}>
               {sortedEvents.length > 0 ? (
-                sortedEvents.map((event, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      borderBottom: index < sortedEvents.length - 1 ? '1px solid #e2e8f0' : 'none',
-                      paddingBottom: '1rem',
-                      marginBottom: '1rem'
-                    }}
-                  >
-                    <h4 style={{
-                      fontSize: '1.125rem',
-                      fontWeight: '600',
-                      color: '#2563eb',
-                      marginBottom: '0.5rem'
-                    }}>
-                      常駐
-                    </h4>
-                    <p style={{ color: '#374151' }}>
-                      常駐: {event.onkyo}
-                    </p>
-                    <p style={{ color: '#4b5563', marginBottom: '0.5rem' }}>
-                      {event.start.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })}
-                    </p>
-                    <p style={{ color: '#374151' }}>
-                      {event.comment}
-                    </p>
-                  </div>
-                ))
+                sortedEvents.map((event, index) => {
+                  const startTime = event.start.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+                  const endTime = event.end ? event.end.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' }) : '';
+                  const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
+
+                  return (
+                    <div
+                      key={index}
+                      style={{
+                        borderBottom: index < sortedEvents.length - 1 ? '1px solid #e2e8f0' : 'none',
+                        paddingBottom: '1rem',
+                        marginBottom: '1rem'
+                      }}
+                    >
+                      {event.shikai && (
+                        <p style={{ color: '#374151' }}>
+                          {event.shikai}
+                        </p>
+                      )}
+                      <p style={{ color: '#4b5563', marginBottom: '0.5rem' }}>
+                        {event.start.toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })} {timeRange}
+                      </p>
+                      {event.comment && (
+                        <p style={{ color: '#374151', marginTop: '0.5rem' }}>
+                          {event.comment}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <p style={{ textAlign: 'center', color: '#6b7280' }}>
-                  表示するイベントがありません。
+                  常駐イベントがありません。
                 </p>
               )}
             </div>
