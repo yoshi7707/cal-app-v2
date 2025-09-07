@@ -273,11 +273,20 @@ const MyCalendar = () => {
 
     return (
         <div style={{ textAlign: 'center' }}>
-            <h2>＜越谷支部行事一覧＞</h2>
-            <button onClick={() => setShowNewEventPopup(true)}>新規行事入力</button>
             <br />
-            <SearchPrayerForResurrection events={events} />
-            <SearchJochu events={events} />
+            <h2>＜越谷支部行事一覧＞</h2>
+            <button onClick={() => setShowNewEventPopup(true)} style={{
+                width: '120px',
+                height: '30px',
+                marginTop: '5px',
+                marginBottom: '20px',
+                marginRight: '10px',
+                borderRadius: '10px',
+                backgroundColor: 'green',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer'
+            }}>新規行事入力</button>
 
             {isLoading ? (
                 <h2>データ取得中...😃</h2>
@@ -398,13 +407,15 @@ const MyCalendar = () => {
                     }}
                 />
             )}
-
+<br />
+            <SearchPrayerForResurrection events={events} />
+            <SearchJochu events={events} />
 
             {/* New Event Popup */}
             {showNewEventPopup && (
                 <div className="popup">
                     <div className="popup-inner">
-                        <h2>新規行事入力</h2>
+                        <h1>新規行事入力</h1>
                         <form onSubmit={handleNewEventSubmit}>
                             <label>行事:</label>
                             <select onChange={(e) => handleEventChange('title', e.target.value)} required>
@@ -453,8 +464,12 @@ const MyCalendar = () => {
                         <h2>行事の変更・削除</h2>
                         <form onSubmit={handleEditEvent}>
                             <p><strong>行事:</strong> {selectedEvent.title}</p>
-                            <p><strong>日付:</strong> {selectedEvent.date}</p>
-                            <p><strong>時間:</strong> {format(selectedEvent.start, 'HH:mm')} - {format(selectedEvent.end, 'HH:mm')}</p>
+                            <label>開始時間:</label>
+                            <input type="datetime-local" value={formatToLocalDateTimeString(selectedEvent.start)} onChange={(e) => handleEventChange('start', new Date(e.target.value))} required />
+                            <br />
+                            <label>終了時間:</label>
+                            <input type="datetime-local" value={formatToLocalDateTimeString(selectedEvent.end)} onChange={(e) => handleEventChange('end', new Date(e.target.value))} required />
+                            <br />
                             <label>導師:</label>
                             <select value={selectedEvent.doushi} onChange={(e) => handleEventChange('doushi', e.target.value)} required>
                                 <option value="">導師選択</option>
