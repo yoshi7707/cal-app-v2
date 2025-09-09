@@ -158,6 +158,20 @@ const MyCalendar = () => {
 
     const handleNewEventSubmit = async (e) => {
         e.preventDefault();
+
+        if (selectedDates.end <= selectedDates.start) {
+            alert('終了時間が過去になっていますので選び直してください。');
+            return;
+        }
+
+        const duration = selectedDates.end.getTime() - selectedDates.start.getTime();
+        const fourHoursInMillis = 4 * 60 * 60 * 1000;
+        if (duration > fourHoursInMillis) {
+            if (!window.confirm('時間が４時間以上ですが、それで良いですか？')) {
+                return;
+            }
+        }
+
         const newEv = {
             eventName: selectedEvent.title,
             startTime: selectedDates.start.toISOString(),
@@ -190,6 +204,19 @@ const MyCalendar = () => {
     const handleEditEvent = async (e) => {
         e.preventDefault();
         if (!selectedEvent || !selectedEvent.id) return;
+
+        if (selectedEvent.end <= selectedEvent.start) {
+            alert('終了時間が過去になっていますので選び直してください。');
+            return;
+        }
+
+        const duration = selectedEvent.end.getTime() - selectedEvent.start.getTime();
+        const fourHoursInMillis = 4 * 60 * 60 * 1000;
+        if (duration > fourHoursInMillis) {
+            if (!window.confirm('時間が４時間以上ですが、それで良いですか？')) {
+                return;
+            }
+        }
 
         const updateData = {
             eventName: selectedEvent.title,
@@ -430,7 +457,7 @@ const MyCalendar = () => {
                             <input type="datetime-local" value={formatToLocalDateTimeString(selectedDates.end)} onChange={(e) => setSelectedDates(p => ({ ...p, end: new Date(e.target.value) }))} required />
                             <br />
                             <label>導師:</label>
-                            <select onChange={(e) => handleEventChange('doushi', e.target.value)} required>
+                            <select onChange={(e) => handleEventChange('doushi', e.target.value)} >
                                 <option value="">導師選択</option>
                                 {doushis.map((d, i) => <option key={i} value={d.name}>{d.name}</option>)}
                             </select>
@@ -463,7 +490,12 @@ const MyCalendar = () => {
                     <div className="popup-inner">
                         <h2>行事の変更・削除</h2>
                         <form onSubmit={handleEditEvent}>
-                            <p><strong>行事:</strong> {selectedEvent.title}</p>
+                            <label>行事:</label>
+                            <select value={selectedEvent.title} onChange={(e) => handleEventChange('title', e.target.value)} required>
+                                <option value="">行事選択</option>
+                                {presetEvents.map((name, i) => <option key={i} value={name}>{name}</option>)}
+                            </select>
+                            <br />
                             <label>開始時間:</label>
                             <input type="datetime-local" value={formatToLocalDateTimeString(selectedEvent.start)} onChange={(e) => handleEventChange('start', new Date(e.target.value))} required />
                             <br />

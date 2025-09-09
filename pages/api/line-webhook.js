@@ -1,5 +1,5 @@
 import prisma from '../../lib/prisma';
-import { createGoogleCalendarEvent } from '../../lib/googleCalendar';
+import { createGoogleCalendarEvent, updateGoogleCalendarEvent } from '../../lib/googleCalendar';
 import crypto from 'crypto';
 
 // This is a simple in-memory store for conversation states.
@@ -187,6 +187,236 @@ export default async function handler(req, res) {
       // --- END OF REGISTRATION LOGIC ---
 
       let state = conversationState[userId] || { step: 'idle' };
+
+      const userNum = parseInt(userText, 10);
+      if (state.step === 'idle' && Number.isInteger(userNum) && userNum >= 1 && userNum <= 2) {
+        if (userNum === 1) {
+          state.step = 'select_event_type';
+          conversationState[userId] = state;
+          await replyToUser(replyToken, `行事の種類を番号で選んでください：
+1) 「復活の祈り」
+2) 常駐
+3) その他`);
+        } else if (userNum === 2) {
+          state.step = 'select_reminder_type';
+          conversationState[userId] = state;
+          await replyToUser(replyToken, `リマインダーの種類を番号で選んでください：\n1) 導師\n2) 音響\n3) 常駐`);
+        }
+        continue;
+      }
+
+      if (state.step === 'select_event_type') {
+        const userNum = parseInt(userText, 10);
+        if (Number.isInteger(userNum) && userNum >= 1 && userNum <= 3) {
+          if (userNum === 1 || userNum === 2) {
+            state.step = 'select_date_from_list';
+            state.data = { eventName: userNum === 1 ? '「復活の祈り」' : '常駐' };
+            
+            const dateOptions = [];
+            const today = new Date();
+            for (let i = 0; i < 30; i++) {
+              const date = new Date(today);
+              date.setDate(today.getDate() + i);
+              const yyyy = date.getFullYear();
+              const mm = String(date.getMonth() + 1).padStart(2, '0');
+              const dd = String(date.getDate()).padStart(2, '0');
+              dateOptions.push(`${yyyy}-${mm}-${dd}`);
+            }
+            state.options = { dateOptions };
+            conversationState[userId] = state;
+
+            const dateListText = dateOptions.map((d, i) => `${i + 1}) ${d}`).join('\n');
+            await replyToUser(replyToken, `日付を選んでください：\n${dateListText}`);
+
+          } else if (userNum === 3) {
+            // Start the "その他" flow by triggering the existing "new event" flow
+            try {
+              const settingsItems = await prisma.settingsItem.findMany({
+                orderBy: { createdAt: 'desc' },
+              });
+
+              const groupedSettings = settingsItems.reduce((acc, item) => {
+                acc[item.type] = acc[item.type] || [];
+                acc[item.type].push(item.name);
+                return acc;
+              }, {});
+
+              const eventNames = groupedSettings.event || [];
+              const doushis = groupedSettings.doushi || [];
+              const onkyos = groupedSettings.onkyo || [];
+              const shikais = groupedSettings.shikai || [];
+
+              if (eventNames.length === 0) {
+                state = { step: 'awaiting_name', data: {} };
+                conversationState[userId] = state;
+                await replyToUser(replyToken, 'プリセット行事が見つかりません。行事名を入力してください。');
+                
+              } else {
+                state = {
+                  step: 'select_name',
+                  data: {},
+                  options: {
+                    names: eventNames,
+                    doushis,
+                    onkyos,
+                    shikais
+                  },
+                  meta: {}
+                };
+                conversationState[userId] = state;
+
+                const listText = eventNames.map((n, i) => `${i + 1}) ${n}`).join('\n');
+                await replyToUser(replyToken, `プリセット行事から番号で選択するか、「カスタム」と入力してください：\n${listText}\n新しい行事名を入力する場合は「カスタム」と入力してください。`);
+              }
+            } catch (err) {
+              console.error('DB error when fetching settings:', err);
+              state = { step: 'awaiting_name', data: {} };
+              conversationState[userId] = state;
+              await replyToUser(replyToken, 'プリセット行事の取得に失敗しました。行事名を入力してください。');
+            }
+          }
+        } else {
+          await replyToUser(replyToken, '無効な選択です。番号で選んでください。');
+        }
+        continue;
+      }
+
+      if (state.step === 'select_date_from_list') {
+        const userNum = parseInt(userText, 10);
+        if (Number.isInteger(userNum) && state.options && state.options.dateOptions && userNum >= 1 && userNum <= state.options.dateOptions.length) {
+          const chosenDate = state.options.dateOptions[userNum - 1];
+          state.data.date = chosenDate;
+
+          if (state.data.eventName === '「復活の祈り」') {
+            state.step = 'select_fukkatsu_time_slot';
+            conversationState[userId] = state;
+            await replyToUser(replyToken, `時間を選んでください：\n1) 10:00 - 11:00\n2) 13:00 - 14:00\n3) 19:00 - 20:00`);
+          } else {
+            const tpl = { startHour: 8, endHour: 22, stepMinutes: 30 };
+            const startTimes = [];
+            for (let minutes = tpl.startHour * 60; minutes < tpl.endHour * 60; minutes += tpl.stepMinutes) {
+              const h = Math.floor(minutes / 60);
+              const m = minutes % 60;
+              const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+              startTimes.push(timeStr);
+            }
+
+            state.options.startTimes = startTimes;
+            state.step = 'select_start_time';
+            conversationState[userId] = state;
+
+            const timesText = startTimes.map((t, i) => `${i + 1}) ${t}`).join('\n');
+            await replyToUser(replyToken, `${chosenDate}の開始時刻を番号で選択してください：\n${timesText}`);
+          }
+        } else {
+          await replyToUser(replyToken, '無効な選択です。番号で選んでください。');
+        }
+        continue;
+      }
+
+      if (state.step === 'select_fukkatsu_time_slot') {
+        const userNum = parseInt(userText, 10);
+        if (Number.isInteger(userNum) && userNum >= 1 && userNum <= 3) {
+          let startTime, endTime;
+          const chosenDate = state.data.date;
+          if (userNum === 1) {
+            startTime = new Date(`${chosenDate}T10:00:00+09:00`);
+            endTime = new Date(`${chosenDate}T11:00:00+09:00`);
+          } else if (userNum === 2) {
+            startTime = new Date(`${chosenDate}T13:00:00+09:00`);
+            endTime = new Date(`${chosenDate}T14:00:00+09:00`);
+          } else if (userNum === 3) {
+            startTime = new Date(`${chosenDate}T19:00:00+09:00`);
+            endTime = new Date(`${chosenDate}T20:00:00+09:00`);
+          }
+
+          state.data.startTime = startTime.toISOString();
+          state.data.endTime = endTime.toISOString();
+
+          // --- Proceed to role selection (original flow continues here) ---
+          state.step = 'select_role';
+          state.meta = { rolesOrder: ['doushi'], roleIndex: 0 };
+          const settingsItems = await prisma.settingsItem.findMany({
+            orderBy: { createdAt: 'desc' },
+          });
+
+          const groupedSettings = settingsItems.reduce((acc, item) => {
+            acc[item.type] = acc[item.type] || [];
+            acc[item.type].push(item.name);
+            return acc;
+          }, {});
+          
+          const roleOptions = {
+            doushi: groupedSettings.doushi || [],
+            onkyo: groupedSettings.onkyo || [],
+            shikai: groupedSettings.shikai || [],
+          };
+          state.options.roles = roleOptions;
+          conversationState[userId] = state;
+
+          const currentRole = state.meta.rolesOrder[state.meta.roleIndex];
+          const opts = (state.options.roles[currentRole] || []);
+          const list = `1) なし\n` + (opts.length ? opts.map((o, i) => `${i + 2}) ${o}`).join('\n') : '(プリセット名なし)');
+          const roleNames = {
+            'doushi': '導師',
+            'onkyo': '音響',
+            'shikai': '常駐'
+          };
+          const roleName = roleNames[currentRole] || currentRole;
+          await replyToUser(replyToken, `${roleName}を番号で選択するか、直接名前を入力してください：\n${list}`);
+
+        } else {
+          await replyToUser(replyToken, '無効な選択です。番号で選んでください。');
+        }
+        continue;
+      }
+
+      if (state.step === 'select_reminder_type') {
+        const userNum = parseInt(userText, 10);
+        if (Number.isInteger(userNum) && userNum >= 1 && userNum <= 3) {
+          let role = '';
+          let roleName = '';
+          if (userNum === 1) {
+            role = 'doushi';
+            roleName = '導師';
+          } else if (userNum === 2) {
+            role = 'onkyo';
+            roleName = '音響';
+          } else if (userNum === 3) {
+            role = 'shikai';
+            roleName = '常駐';
+          }
+
+          const userProfile = await getUserProfile(userId);
+
+          if (!userProfile) {
+            await replyToUser(replyToken, 'プロフィールの取得に失敗しました。ボットをブロックしていないか確認してください。');
+            continue;
+          }
+
+          const { displayName } = userProfile;
+
+          try {
+            await prisma.settingsItem.upsert({
+              where: {
+                type_name: { type: role, name: displayName }
+              },
+              update: { lineId: userId },
+              create: { type: role, name: displayName, lineId: userId },
+            });
+
+            await replyToUser(replyToken, `登録が完了しました.\n名前： ${displayName}\n役割： ${roleName}`);
+          } catch (dbError) {
+            console.error('DB error during registration:', dbError);
+            await replyToUser(replyToken, 'データベースへの登録中にエラーが発生しました。');
+          } finally {
+            delete conversationState[userId];
+          }
+        } else {
+          await replyToUser(replyToken, '無効な選択です。番号で選んでください。');
+        }
+        continue;
+      }
 
       if (userText.toLowerCase() === 'cancel' || userText === 'キャンセル') {
         delete conversationState[userId];
@@ -395,11 +625,26 @@ export default async function handler(req, res) {
 
         // --- Proceed to role selection (original flow continues here) ---
         state.step = 'select_role';
-        state.meta = { rolesOrder: ['doushi', 'onkyo', 'shikai'], roleIndex: 0 };
+        if (state.data.eventName === '常駐') {
+            state.meta = { rolesOrder: ['shikai'], roleIndex: 0 };
+        } else {
+            state.meta = { rolesOrder: ['doushi', 'onkyo'], roleIndex: 0 };
+        }
+        
+        const settingsItems = await prisma.settingsItem.findMany({
+          orderBy: { createdAt: 'desc' },
+        });
+
+        const groupedSettings = settingsItems.reduce((acc, item) => {
+          acc[item.type] = acc[item.type] || [];
+          acc[item.type].push(item.name);
+          return acc;
+        }, {});
+        
         const roleOptions = {
-          doushi: state.options.doushis || [],
-          onkyo: state.options.onkyos || [],
-          shikai: state.options.shikais || [],
+          doushi: groupedSettings.doushi || [],
+          onkyo: groupedSettings.onkyo || [],
+          shikai: groupedSettings.shikai || [],
         };
         state.options.roles = roleOptions;
         conversationState[userId] = state;
@@ -504,38 +749,121 @@ export default async function handler(req, res) {
 
         if (confirmation === '1') {
           try {
-            const newEvent = await prisma.event.create({
-              data: {
-                eventName: state.data.eventName,
-                date: state.data.date,
-                startTime: state.data.startTime,
-                endTime: state.data.endTime,
-                doushi: state.data.doushi || 'N/A',
-                onkyo: state.data.onkyo || 'N/A',
-                shikai: state.data.shikai || 'N/A',
-                comment: state.data.comment || '',
+            if (state.data.eventName === '「復活の祈り」') {
+              const existingEvent = await prisma.event.findFirst({
+                where: {
+                  eventName: '「復活の祈り」',
+                  startTime: state.data.startTime,
+                },
+              });
+
+              if (existingEvent) {
+                // Update existing event
+                const updatedEvent = await prisma.event.update({
+                  where: { id: existingEvent.id },
+                  data: { doushi: state.data.doushi || 'N/A' },
+                });
+
+                // Also update Google Calendar event
+                if (updatedEvent.googleEventId) {
+                    try {
+                        const googleEventData = {
+                            title: updatedEvent.eventName,
+                            description: `導師: ${updatedEvent.doushi}\n音響: ${updatedEvent.onkyo}\n常駐: ${updatedEvent.shikai}\n\nコメント: ${updatedEvent.comment}`,
+                            start: updatedEvent.startTime,
+                            end: updatedEvent.endTime,
+                            allDay: false,
+                        };
+                        await updateGoogleCalendarEvent(updatedEvent.googleEventId, googleEventData);
+                    } catch (error) {
+                        if (error.message.includes("Not Found")) {
+                            // Event not found in Google Calendar, create a new one
+                            const googleEventData = {
+                                title: updatedEvent.eventName,
+                                description: `導師: ${updatedEvent.doushi}\n音響: ${updatedEvent.onkyo}\n常駐: ${updatedEvent.shikai}\n\nコメント: ${updatedEvent.comment}`,
+                                start: updatedEvent.startTime,
+                                end: updatedEvent.endTime,
+                                allDay: false,
+                            };
+                            const newGoogleEvent = await createGoogleCalendarEvent(googleEventData);
+                            await prisma.event.update({
+                                where: { id: updatedEvent.id },
+                                data: { googleEventId: newGoogleEvent.id },
+                            });
+                        } else {
+                            throw error; // Re-throw other errors
+                        }
+                    }
+                }
+
+                await replyToUser(replyToken, `✅ 完了！行事「${updatedEvent.eventName}」の導師を更新しました😃`);
+
+              } else {
+                // Create new event
+                const newEvent = await prisma.event.create({
+                  data: {
+                    eventName: state.data.eventName,
+                    date: state.data.date,
+                    startTime: state.data.startTime,
+                    endTime: state.data.endTime,
+                    doushi: state.data.doushi || 'N/A',
+                    onkyo: 'N/A',
+                    shikai: 'N/A',
+                    comment: state.data.comment || '',
+                  }
+                });
+
+                const googleEventData = {
+                  title: newEvent.eventName,
+                  description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n常駐: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
+                  start: newEvent.startTime,
+                  end: newEvent.endTime,
+                  allDay: false,
+                };
+                const googleEvent = await createGoogleCalendarEvent(googleEventData);
+
+                await prisma.event.update({
+                  where: { id: newEvent.id },
+                  data: { googleEventId: googleEvent.id },
+                });
+
+                await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成されました😃`);
               }
-            });
+            }
+            else {
+              // Logic for other events
+              const newEvent = await prisma.event.create({
+                data: {
+                  eventName: state.data.eventName,
+                  date: state.data.date,
+                  startTime: state.data.startTime,
+                  endTime: state.data.endTime,
+                  doushi: state.data.doushi || 'N/A',
+                  onkyo: state.data.onkyo || 'N/A',
+                  shikai: state.data.shikai || 'N/A',
+                  comment: state.data.comment || '',
+                }
+              });
 
-            const googleEventData = {
-              title: newEvent.eventName,
-              description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n常駐: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
-              start: newEvent.startTime,
-              end: newEvent.endTime,
-              allDay: false,
-            };
-            const googleEvent = await createGoogleCalendarEvent(googleEventData);
+              const googleEventData = {
+                title: newEvent.eventName,
+                description: `導師: ${newEvent.doushi}\n音響: ${newEvent.onkyo}\n常駐: ${newEvent.shikai}\n\nコメント: ${newEvent.comment}`,
+                start: newEvent.startTime,
+                end: newEvent.endTime,
+                allDay: false,
+              };
+              const googleEvent = await createGoogleCalendarEvent(googleEventData);
 
-            await prisma.event.update({
-              where: { id: newEvent.id },
-              data: { googleEventId: googleEvent.id },
-            });
+              await prisma.event.update({
+                where: { id: newEvent.id },
+                data: { googleEventId: googleEvent.id },
+              });
 
-            await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成されました😃`);
-
+              await replyToUser(replyToken, `✅ 完了！行事「${newEvent.eventName}」が作成されました😃`);
+            }
           } catch (error) {
-            console.error('Failed to create event:', error);
-            await replyToUser(replyToken, `申し訳ございません。行事の作成中にエラーが発生しました：${error.message}`);
+            console.error('Failed to create/update event:', error);
+            await replyToUser(replyToken, `申し訳ございません。処理中にエラーが発生しました：${error.message}`);
           } finally {
             delete conversationState[userId];
           }
@@ -549,7 +877,9 @@ export default async function handler(req, res) {
       }
 
       // If no matching flow, prompt user quickly
-      await replyToUser(replyToken, '新しい行事を作成するには「new event」または「新規行事」と入力してください。キャンセルするには「cancel」と入力してください。');
+      await replyToUser(replyToken, `ご希望の操作を番号で選んでください：
+1) 行事入力
+2) リマインダ登録`);
     }
   }
 
