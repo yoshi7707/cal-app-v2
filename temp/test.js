@@ -36,7 +36,6 @@ model SettingsItem {
   lineId    String?
   createdAt DateTime @default(now())
 
-  // @@unique([type, name])
-  @@unique([type, name], name: "type_name")
+  @@unique([type, name])
   @@map("settings_items")
 }
