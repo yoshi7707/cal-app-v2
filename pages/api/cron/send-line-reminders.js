@@ -145,14 +145,18 @@ export default async function handler(req, res) {
       // Send one message per person
       for (const personName in rolesByPerson) {
         if (lineUserIdMap[personName]) {
-          const rolesText = rolesByPerson[personName].join('、')
-          const eventTime = new Date(e.startTime).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' });
-          const message = `【リマインダー】明日${eventTime}～「${title}」の${rolesText}担当です。`
+          const rolesText = rolesByPerson[personName].join('、');
+          const eventDate = new Date(e.startTime);
+          const dateText = eventDate.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', timeZone: 'Asia/Tokyo' });
+          const eventTime = eventDate.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' });
+          
+          const message = `${personName}さん\n \n本日 ${dateText} ${eventTime}～「${title}」の${rolesText}担当です。`;
+          
           if (dryRun) {
-            pushCount += 1
+            pushCount += 1;
           } else {
-            await sendLineMessage(lineUserIdMap[personName], message)
-            pushCount += 1
+            await sendLineMessage(lineUserIdMap[personName], message);
+            pushCount += 1;
           }
         }
       }
