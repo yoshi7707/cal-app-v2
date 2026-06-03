@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"git.repositoryScanMaxDepth": 0,
+		"git.ignoredRepositories": [
+			"/Users/yoshitaguchi/Documents/projects/cal-app-v2/react-big-calendar"
+		]
+	}
+}
