@@ -4,7 +4,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/ja';
 moment.locale('ja');
-import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
 
 import SearchPrayerForResurrection from './searchPrayerForResurrection';
