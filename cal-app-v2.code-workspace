@@ -6,6 +6,12 @@
 	],
 	"settings": {
 		"git.repositoryScanMaxDepth": 0,
+		"git.detectSubmodules": false,
+		"git.repositoryScanIgnoredFolders": [
+			"react-big-calendar",
+			"node_modules",
+			".next"
+		],
 		"git.ignoredRepositories": [
 			"/Users/yoshitaguchi/Documents/projects/cal-app-v2/react-big-calendar"
 		]
