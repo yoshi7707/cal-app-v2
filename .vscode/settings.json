@@ -1,3 +1,6 @@
 {
-    "liveServer.settings.multiRootWorkspaceName": "cal-app"
+    "liveServer.settings.multiRootWorkspaceName": "cal-app",
+    "git.ignoredRepositories": [
+        "/Users/yoshitaguchi/Documents/projects/cal-app-v2/react-big-calendar"
+    ]
 }
