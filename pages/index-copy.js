@@ -4,9 +4,9 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import moment from 'moment';
 import 'moment/locale/ja';
 moment.locale('ja');
-import * as dates from '../react-big-calendar/src/utils/dates'
+import * as dates from 'react-big-calendar/lib/utils/dates'
 
-import withDragAndDrop from '../react-big-calendar/src/addons/dragAndDrop'
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop'
 const DragAndDropCalendar = withDragAndDrop(Calendar)
 
 import { dateFnsLocalizer } from 'react-big-calendar';

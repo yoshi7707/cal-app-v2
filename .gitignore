@@ -25,3 +25,6 @@ yarn-error.log*
 .next
 
 service-account-key.json
+
+# vendored submodule removed; use npm react-big-calendar instead
+/react-big-calendar/
